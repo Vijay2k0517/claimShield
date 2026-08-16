@@ -1,0 +1,86 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — GLOBAL RESET & BASE STYLES
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  background-color: var(--cs-bg-base);
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--cs-bg-base);
+  color: var(--cs-text-primary);
+  font-size: var(--cs-text-size-body);
+  line-height: var(--cs-leading-normal);
+  overflow-x: hidden;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+a {
+  color: var(--cs-primary-text);
+  text-decoration: none;
+  transition: color var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img, svg, video {
+  display: block;
+  max-width: 100%;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cs-bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cs-slate-700);
+  border-radius: var(--cs-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cs-slate-600);
+}
+
+/* Tabular Numerals for Numerical Stability */
+.tabular-nums,
+.cs-tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Global Focus-Visible Outline */
+:focus-visible {
+  outline: 2px solid var(--cs-border-focus);
+  outline-offset: 2px;
+}

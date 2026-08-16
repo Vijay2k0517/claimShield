@@ -1,0 +1,107 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — NAVIGATION PRIMITIVE STYLES
+   (OBSIDIAN + ARCTIC BLUE)
+   ========================================================================== */
+
+/* TABS */
+.cs-tabs-list {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1);
+}
+
+.cs-tabs-boxed {
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  padding: 3px;
+  border-radius: var(--cs-radius-md);
+}
+
+.cs-tabs-underline {
+  border-bottom: 1px solid var(--cs-border-default);
+  width: 100%;
+  gap: var(--cs-space-6);
+}
+
+.cs-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  font-family: var(--cs-font-sans);
+  font-size: var(--cs-text-size-body-sm);
+  font-weight: var(--cs-font-weight-medium);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color var(--cs-duration-fast) var(--cs-ease-default),
+    background-color var(--cs-duration-fast) var(--cs-ease-default),
+    border-color var(--cs-duration-fast) var(--cs-ease-default);
+  color: var(--cs-stone-400);
+  white-space: nowrap;
+}
+
+/* Boxed Tab Variant */
+.cs-tabs-boxed .cs-tab-item {
+  padding: var(--cs-space-1-5) var(--cs-space-3);
+  border-radius: var(--cs-radius-sm);
+}
+
+.cs-tabs-boxed .cs-tab-item:hover:not(.cs-tab-active) {
+  color: var(--cs-text-primary);
+  background-color: var(--cs-bg-hover);
+}
+
+.cs-tabs-boxed .cs-tab-active {
+  color: var(--cs-text-primary);
+  background-color: var(--cs-obsidian-800);
+  box-shadow: var(--cs-elevation-subtle);
+}
+
+/* Underline Tab Variant */
+.cs-tabs-underline .cs-tab-item {
+  padding: var(--cs-space-2-5) 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.cs-tabs-underline .cs-tab-item:hover:not(.cs-tab-active) {
+  color: var(--cs-text-primary);
+}
+
+.cs-tabs-underline .cs-tab-active {
+  color: var(--cs-primary-text);
+  border-bottom-color: var(--cs-primary);
+}
+
+/* BREADCRUMB */
+.cs-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  font-size: var(--cs-text-size-body-sm);
+  color: var(--cs-stone-400);
+}
+
+.cs-breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+}
+
+.cs-breadcrumb-item a {
+  color: var(--cs-stone-400);
+}
+
+.cs-breadcrumb-item a:hover {
+  color: var(--cs-text-primary);
+  text-decoration: none;
+}
+
+.cs-breadcrumb-current {
+  color: var(--cs-text-primary);
+  font-weight: var(--cs-font-weight-medium);
+}
+
+.cs-breadcrumb-separator {
+  color: var(--cs-stone-500);
+}

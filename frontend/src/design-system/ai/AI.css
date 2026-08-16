@@ -1,0 +1,197 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — AI & EXPLAINABILITY COMPONENT STYLES
+   (OBSIDIAN + ARCTIC BLUE + SOFT RISK TINTS)
+   ========================================================================== */
+
+/* FRAUD PROBABILITY HERO COMPONENT */
+.cs-fraud-prob-card {
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  padding: var(--cs-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+  position: relative;
+  overflow: hidden;
+}
+
+.cs-fraud-prob-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--cs-obsidian-700);
+}
+
+.cs-fraud-prob-card.cs-risk-high::before {
+  background-color: var(--cs-danger);
+}
+
+.cs-fraud-prob-card.cs-risk-review::before {
+  background-color: var(--cs-warning);
+}
+
+.cs-fraud-prob-card.cs-risk-low::before {
+  background-color: var(--cs-success);
+}
+
+.cs-fraud-prob-label {
+  font-size: var(--cs-text-size-caption);
+  font-weight: var(--cs-font-weight-semibold);
+  letter-spacing: var(--cs-tracking-wider);
+  text-transform: uppercase;
+  color: var(--cs-stone-400);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cs-fraud-prob-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--cs-space-4);
+}
+
+.cs-fraud-prob-score {
+  font-size: 2.75rem;
+  font-weight: var(--cs-font-weight-bold);
+  line-height: 1;
+  color: var(--cs-text-primary);
+  letter-spacing: var(--cs-tracking-tight);
+}
+
+.cs-fraud-prob-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-1);
+}
+
+.cs-fraud-prob-track {
+  height: 6px;
+  background-color: var(--cs-obsidian-800);
+  border-radius: var(--cs-radius-full);
+  position: relative;
+  overflow: hidden;
+}
+
+.cs-fraud-prob-fill {
+  height: 100%;
+  border-radius: var(--cs-radius-full);
+  transition: width var(--cs-duration-slow) var(--cs-ease-default);
+}
+
+.cs-fraud-prob-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--cs-stone-500);
+  font-family: var(--cs-font-mono);
+}
+
+/* AI RECOMMENDATION BANNER */
+.cs-ai-recommendation {
+  background-color: var(--cs-obsidian-850);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  padding: var(--cs-space-4) var(--cs-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+}
+
+.cs-ai-rec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cs-space-2);
+}
+
+.cs-ai-rec-badge {
+  font-size: var(--cs-text-size-caption);
+  text-transform: uppercase;
+  letter-spacing: var(--cs-tracking-wider);
+  color: var(--cs-primary-text);
+  font-weight: var(--cs-font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1-5);
+}
+
+.cs-ai-rec-title {
+  font-size: var(--cs-text-size-h2);
+  font-weight: var(--cs-font-weight-semibold);
+  color: var(--cs-text-primary);
+}
+
+.cs-ai-rec-disclaimer {
+  font-size: var(--cs-text-size-caption);
+  color: var(--cs-stone-500);
+  font-style: italic;
+}
+
+/* PROCESSING PIPELINE TRACKER */
+.cs-processing-pipeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-2);
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  padding: var(--cs-space-4) var(--cs-space-5);
+}
+
+.cs-pipeline-step {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-3);
+  font-size: var(--cs-text-size-body-sm);
+  padding: var(--cs-space-2) 0;
+  border-bottom: 1px solid var(--cs-border-subtle);
+}
+
+.cs-pipeline-step:last-child {
+  border-bottom: none;
+}
+
+.cs-pipeline-step-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.cs-step-done {
+  color: var(--cs-success-text);
+  background-color: var(--cs-success-subtle);
+}
+
+.cs-step-active {
+  color: var(--cs-primary-text);
+  background-color: var(--cs-primary-subtle);
+  animation: cs-pulse 1.2s infinite ease-in-out;
+}
+
+.cs-step-pending {
+  color: var(--cs-stone-500);
+  background-color: var(--cs-obsidian-800);
+}
+
+/* FEATURE IMPORTANCE BARS */
+.cs-feature-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--cs-space-3);
+}
+
+.cs-feature-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--cs-text-size-body-sm);
+  color: var(--cs-stone-300);
+}

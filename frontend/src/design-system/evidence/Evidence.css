@@ -1,0 +1,205 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — VEHICLE EVIDENCE & VISUAL INSPECTION STYLES
+   (OBSIDIAN + ARCTIC BLUE)
+   ========================================================================== */
+
+/* EVIDENCE VIEWER CONTAINER */
+.cs-evidence-viewer {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background-color: #03060b;
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.cs-evidence-viewer-canvas {
+  position: relative;
+  display: inline-block;
+  transform-origin: center center;
+  transition: transform var(--cs-duration-fast) var(--cs-ease-default);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.cs-evidence-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--cs-radius-md);
+}
+
+/* OVERLAYS */
+.cs-heatmap-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  border-radius: var(--cs-radius-md);
+}
+
+.cs-bbox-marker {
+  position: absolute;
+  border: 1.5px dashed var(--cs-danger);
+  background-color: rgba(244, 63, 94, 0.12);
+  border-radius: var(--cs-radius-xs);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cs-bbox-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background-color: var(--cs-danger);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: var(--cs-font-weight-semibold);
+  padding: 1px 5px;
+  border-radius: var(--cs-radius-xs);
+  white-space: nowrap;
+  letter-spacing: var(--cs-tracking-wide);
+}
+
+/* FLOATING TOOLBAR */
+.cs-evidence-toolbar {
+  position: absolute;
+  bottom: var(--cs-space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1-5);
+  background-color: rgba(11, 15, 25, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-full);
+  padding: 4px 8px;
+  z-index: 20;
+  box-shadow: var(--cs-elevation-overlay);
+}
+
+.cs-evidence-topbar {
+  position: absolute;
+  top: var(--cs-space-3);
+  left: var(--cs-space-3);
+  right: var(--cs-space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.cs-evidence-topbar > * {
+  pointer-events: auto;
+}
+
+/* COMPARISON SLIDER */
+.cs-comparison-container {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background-color: #03060b;
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  overflow: hidden;
+  user-select: none;
+}
+
+.cs-comparison-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cs-comparison-before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.cs-comparison-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #ffffff;
+  z-index: 10;
+  cursor: ew-resize;
+}
+
+.cs-comparison-handle-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--cs-obsidian-900);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--cs-elevation-overlay);
+}
+
+/* EVIDENCE THUMBNAILS & GALLERY */
+.cs-evidence-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--cs-space-2-5);
+}
+
+.cs-evidence-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--cs-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--cs-border-default);
+  cursor: pointer;
+  background-color: var(--cs-obsidian-850);
+  transition:
+    border-color var(--cs-duration-fast) var(--cs-ease-default),
+    transform var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+.cs-evidence-thumb:hover {
+  border-color: var(--cs-primary-text);
+  transform: translateY(-1px);
+}
+
+.cs-evidence-thumb.cs-thumb-selected {
+  border-color: var(--cs-border-focus);
+  box-shadow: 0 0 0 2px var(--cs-border-focus);
+}
+
+.cs-evidence-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cs-thumb-tag {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background-color: rgba(7, 10, 17, 0.85);
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: var(--cs-radius-xs);
+  color: var(--cs-stone-300);
+}

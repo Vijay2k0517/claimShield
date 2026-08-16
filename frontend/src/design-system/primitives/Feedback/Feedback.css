@@ -1,0 +1,159 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — FEEDBACK, ALERTS, SKELETONS & EMPTY STATES
+   (OBSIDIAN + ARCTIC BLUE + SOFT RISK TINTS)
+   ========================================================================== */
+
+/* ALERT */
+.cs-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cs-space-3);
+  padding: var(--cs-space-3) var(--cs-space-4);
+  border-radius: var(--cs-radius-md);
+  border: 1px solid transparent;
+  font-size: var(--cs-text-size-body-sm);
+  line-height: var(--cs-leading-normal);
+  position: relative;
+}
+
+.cs-alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cs-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-alert-title {
+  font-weight: var(--cs-font-weight-semibold);
+  margin-bottom: 2px;
+  color: var(--cs-text-primary);
+}
+
+.cs-alert-info {
+  background-color: var(--cs-info-subtle);
+  border-color: var(--cs-info-border);
+  color: var(--cs-stone-200);
+}
+.cs-alert-info .cs-alert-icon { color: var(--cs-info-text); }
+
+.cs-alert-success {
+  background-color: var(--cs-success-subtle);
+  border-color: var(--cs-success-border);
+  color: var(--cs-stone-200);
+}
+.cs-alert-success .cs-alert-icon { color: var(--cs-success-text); }
+
+.cs-alert-warning {
+  background-color: var(--cs-warning-subtle);
+  border-color: var(--cs-warning-border);
+  color: var(--cs-stone-200);
+}
+.cs-alert-warning .cs-alert-icon { color: var(--cs-warning-text); }
+
+.cs-alert-danger {
+  background-color: var(--cs-danger-subtle);
+  border-color: var(--cs-danger-border);
+  color: var(--cs-stone-200);
+}
+.cs-alert-danger .cs-alert-icon { color: var(--cs-danger-text); }
+
+/* TOAST */
+.cs-toast-container {
+  position: fixed;
+  bottom: var(--cs-space-5);
+  right: var(--cs-space-5);
+  z-index: var(--cs-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-2);
+  pointer-events: none;
+}
+
+.cs-toast {
+  pointer-events: auto;
+  min-width: 320px;
+  max-width: 440px;
+  background-color: var(--cs-obsidian-850);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-md);
+  box-shadow: var(--cs-elevation-overlay);
+  padding: var(--cs-space-3) var(--cs-space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cs-space-3);
+  animation: cs-slide-in-up var(--cs-duration-normal) var(--cs-ease-default);
+}
+
+/* SKELETON */
+.cs-skeleton {
+  background-color: var(--cs-obsidian-800);
+  border-radius: var(--cs-radius-sm);
+  animation: cs-pulse 1.6s ease-in-out infinite;
+}
+
+.cs-skeleton-circle {
+  border-radius: 50%;
+}
+
+@keyframes cs-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes cs-slide-in-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* SPINNER */
+.cs-spinner {
+  border: 2px solid var(--cs-obsidian-700);
+  border-top-color: var(--cs-primary-text);
+  border-radius: 50%;
+  animation: cs-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.cs-spinner-sm { width: 16px; height: 16px; border-width: 2px; }
+.cs-spinner-md { width: 24px; height: 24px; border-width: 2.5px; }
+.cs-spinner-lg { width: 36px; height: 36px; border-width: 3px; }
+
+/* EMPTY & ERROR STATES */
+.cs-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--cs-space-8) var(--cs-space-6);
+  border-radius: var(--cs-radius-lg);
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  gap: var(--cs-space-3);
+}
+
+.cs-state-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--cs-radius-full);
+  background-color: var(--cs-obsidian-800);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cs-stone-400);
+}
+
+.cs-state-title {
+  font-size: var(--cs-text-size-h3);
+  font-weight: var(--cs-font-weight-semibold);
+  color: var(--cs-text-primary);
+}
+
+.cs-state-desc {
+  font-size: var(--cs-text-size-body-sm);
+  color: var(--cs-stone-400);
+  max-width: 420px;
+}

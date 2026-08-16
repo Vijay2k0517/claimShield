@@ -1,0 +1,74 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — SIMILAR & DUPLICATE CLAIM PRIMITIVE STYLES
+   (OBSIDIAN + ARCTIC BLUE + SOFT RISK TINTS)
+   ========================================================================== */
+
+.cs-similar-card {
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  padding: var(--cs-space-4);
+  display: flex;
+  gap: var(--cs-space-3);
+  align-items: center;
+  transition:
+    border-color var(--cs-duration-fast) var(--cs-ease-default),
+    background-color var(--cs-duration-fast) var(--cs-ease-default);
+  cursor: pointer;
+}
+
+.cs-similar-card:hover {
+  border-color: var(--cs-obsidian-700);
+  background-color: var(--cs-bg-hover);
+}
+
+.cs-similar-card.cs-card-active {
+  border-color: var(--cs-primary-border);
+  background-color: var(--cs-primary-subtle);
+}
+
+.cs-similar-thumb {
+  width: 84px;
+  height: 64px;
+  border-radius: var(--cs-radius-sm);
+  overflow: hidden;
+  background-color: var(--cs-obsidian-800);
+  flex-shrink: 0;
+  border: 1px solid var(--cs-border-default);
+}
+
+.cs-similar-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cs-similar-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cs-similar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cs-similar-id {
+  font-weight: var(--cs-font-weight-semibold);
+  font-size: var(--cs-text-size-body);
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-mono);
+}
+
+.cs-similar-score {
+  font-weight: var(--cs-font-weight-bold);
+  font-size: var(--cs-text-size-body-sm);
+  color: var(--cs-warning-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

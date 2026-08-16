@@ -1,0 +1,378 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — FORM CONTROL STYLES (OBSIDIAN + WARM GRAPHITE)
+   ========================================================================== */
+
+.cs-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-1-5);
+  width: 100%;
+}
+
+.cs-form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cs-space-2);
+}
+
+.cs-form-label {
+  font-family: var(--cs-font-sans);
+  font-size: var(--cs-text-size-body-sm);
+  font-weight: var(--cs-font-weight-medium);
+  color: var(--cs-stone-300);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1);
+}
+
+.cs-form-required {
+  color: var(--cs-danger-text);
+  font-weight: var(--cs-font-weight-bold);
+}
+
+.cs-form-optional {
+  font-size: var(--cs-text-size-caption);
+  color: var(--cs-stone-500);
+}
+
+.cs-form-helper-text {
+  font-size: var(--cs-text-size-caption);
+  color: var(--cs-stone-400);
+  line-height: var(--cs-leading-tight);
+}
+
+.cs-form-error-text {
+  font-size: var(--cs-text-size-caption);
+  color: var(--cs-danger-text);
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-1);
+  line-height: var(--cs-leading-tight);
+}
+
+/* BASE INPUT WRAPPER */
+.cs-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: var(--cs-radius-md);
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  transition:
+    border-color var(--cs-duration-fast) var(--cs-ease-default),
+    box-shadow var(--cs-duration-fast) var(--cs-ease-default),
+    background-color var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+.cs-input-wrapper:hover:not(.cs-disabled):not(.cs-error) {
+  border-color: var(--cs-obsidian-700);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-input-wrapper:focus-within:not(.cs-disabled):not(.cs-error) {
+  border-color: var(--cs-border-focus);
+  box-shadow: 0 0 0 1px var(--cs-border-focus);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-input-wrapper.cs-error {
+  border-color: var(--cs-danger);
+  box-shadow: 0 0 0 1px var(--cs-danger);
+}
+
+.cs-input-wrapper.cs-disabled {
+  opacity: 0.5;
+  background-color: rgba(11, 15, 25, 0.4);
+  cursor: not-allowed;
+}
+
+/* NATIVE INPUT & TEXTAREA */
+.cs-input {
+  width: 100%;
+  height: var(--cs-control-height-md);
+  padding: 0 var(--cs-space-3);
+  background: transparent;
+  border: none;
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-sans);
+  font-size: var(--cs-text-size-body);
+  outline: none;
+}
+
+.cs-input-sm {
+  height: var(--cs-control-height-sm);
+  padding: 0 var(--cs-space-2-5);
+  font-size: var(--cs-text-size-body-sm);
+}
+
+.cs-input-lg {
+  height: var(--cs-control-height-lg);
+  padding: 0 var(--cs-space-4);
+  font-size: var(--cs-text-size-body-lg);
+}
+
+.cs-input::placeholder {
+  color: var(--cs-stone-500);
+}
+
+.cs-input:disabled {
+  cursor: not-allowed;
+}
+
+.cs-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cs-stone-400);
+  padding: 0 var(--cs-space-2-5);
+  flex-shrink: 0;
+}
+
+/* TEXTAREA */
+.cs-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: var(--cs-space-2-5) var(--cs-space-3);
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-md);
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-sans);
+  font-size: var(--cs-text-size-body);
+  line-height: var(--cs-leading-normal);
+  resize: vertical;
+  outline: none;
+  transition:
+    border-color var(--cs-duration-fast) var(--cs-ease-default),
+    box-shadow var(--cs-duration-fast) var(--cs-ease-default),
+    background-color var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+.cs-textarea:hover:not(:disabled):not(.cs-error) {
+  border-color: var(--cs-obsidian-700);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-textarea:focus:not(:disabled):not(.cs-error) {
+  border-color: var(--cs-border-focus);
+  box-shadow: 0 0 0 1px var(--cs-border-focus);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-textarea.cs-error {
+  border-color: var(--cs-danger);
+  box-shadow: 0 0 0 1px var(--cs-danger);
+}
+
+.cs-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* SELECT */
+.cs-select {
+  appearance: none;
+  width: 100%;
+  height: var(--cs-control-height-md);
+  padding: 0 var(--cs-space-8) 0 var(--cs-space-3);
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-md);
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-sans);
+  font-size: var(--cs-text-size-body);
+  outline: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--cs-space-2-5) center;
+  transition:
+    border-color var(--cs-duration-fast) var(--cs-ease-default),
+    box-shadow var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+.cs-select option {
+  background-color: var(--cs-obsidian-900);
+  color: var(--cs-text-primary);
+  padding: var(--cs-space-2);
+}
+
+.cs-select:hover:not(:disabled):not(.cs-error) {
+  border-color: var(--cs-obsidian-700);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-select:focus:not(:disabled):not(.cs-error) {
+  border-color: var(--cs-border-focus);
+  box-shadow: 0 0 0 1px var(--cs-border-focus);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-select.cs-error {
+  border-color: var(--cs-danger);
+  box-shadow: 0 0 0 1px var(--cs-danger);
+}
+
+.cs-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* CHECKBOX & RADIO */
+.cs-control-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-2-5);
+  cursor: pointer;
+  user-select: none;
+  font-size: var(--cs-text-size-body);
+  color: var(--cs-stone-300);
+}
+
+.cs-control-row.cs-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cs-checkbox, .cs-radio {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background-color: var(--cs-obsidian-900);
+  border: 1px solid var(--cs-obsidian-700);
+  outline: none;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  transition:
+    background-color var(--cs-duration-fast) var(--cs-ease-default),
+    border-color var(--cs-duration-fast) var(--cs-ease-default);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.cs-checkbox {
+  border-radius: var(--cs-radius-sm);
+}
+
+.cs-radio {
+  border-radius: var(--cs-radius-full);
+}
+
+.cs-checkbox:checked, .cs-radio:checked {
+  background-color: var(--cs-primary);
+  border-color: var(--cs-primary);
+}
+
+.cs-checkbox:checked::before {
+  content: "";
+  width: 8px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.cs-radio:checked::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+.cs-checkbox:focus-visible, .cs-radio:focus-visible {
+  outline: 2px solid var(--cs-border-focus);
+  outline-offset: 2px;
+}
+
+/* SWITCH */
+.cs-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.cs-switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cs-switch-track {
+  width: 36px;
+  height: 20px;
+  background-color: var(--cs-obsidian-800);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-full);
+  position: relative;
+  transition: background-color var(--cs-duration-fast) var(--cs-ease-default);
+  flex-shrink: 0;
+}
+
+.cs-switch-thumb {
+  width: 14px;
+  height: 14px;
+  background-color: var(--cs-stone-300);
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--cs-duration-fast) var(--cs-ease-default), background-color var(--cs-duration-fast);
+}
+
+.cs-switch-input:checked + .cs-switch-track {
+  background-color: var(--cs-primary);
+  border-color: var(--cs-primary);
+}
+
+.cs-switch-input:checked + .cs-switch-track .cs-switch-thumb {
+  transform: translateX(16px);
+  background-color: #ffffff;
+}
+
+.cs-switch-input:focus-visible + .cs-switch-track {
+  outline: 2px solid var(--cs-border-focus);
+  outline-offset: 2px;
+}
+
+/* FILE UPLOAD (VEHICLE DAMAGE EVIDENCE READY) */
+.cs-file-upload {
+  border: 1.5px dashed var(--cs-obsidian-700);
+  border-radius: var(--cs-radius-lg);
+  padding: var(--cs-space-6) var(--cs-space-4);
+  text-align: center;
+  background-color: rgba(11, 15, 25, 0.6);
+  cursor: pointer;
+  transition:
+    border-color var(--cs-duration-fast) var(--cs-ease-default),
+    background-color var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+.cs-file-upload:hover,
+.cs-file-upload.cs-drag-over {
+  border-color: var(--cs-primary-text);
+  background-color: var(--cs-primary-subtle);
+}
+
+.cs-file-upload-icon {
+  color: var(--cs-primary-text);
+  margin-bottom: var(--cs-space-2);
+}
+
+.cs-file-upload-title {
+  font-weight: var(--cs-font-weight-medium);
+  color: var(--cs-text-primary);
+  font-size: var(--cs-text-size-body);
+}
+
+.cs-file-upload-subtitle {
+  font-size: var(--cs-text-size-caption);
+  color: var(--cs-stone-400);
+  margin-top: var(--cs-space-1);
+}

@@ -1,0 +1,196 @@
+/* ==========================================================================
+   CLAIMSHIELD AI — OVERLAYS, DRAWERS, TOOLTIPS & DIALOGS
+   ========================================================================== */
+
+/* BACKDROP */
+.cs-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: var(--cs-bg-overlay);
+  backdrop-filter: blur(4px);
+  z-index: var(--cs-z-modal);
+  animation: cs-fade-in var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+/* DIALOG / MODAL */
+.cs-dialog-container {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: var(--cs-z-modal);
+  padding: var(--cs-space-4);
+  pointer-events: none;
+}
+
+.cs-dialog {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 520px;
+  background-color: var(--cs-obsidian-850);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-elevation-overlay);
+  overflow: hidden;
+  animation: cs-scale-in var(--cs-duration-normal) var(--cs-ease-default);
+}
+
+.cs-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cs-space-4) var(--cs-space-5);
+  border-bottom: 1px solid var(--cs-border-default);
+}
+
+.cs-dialog-title {
+  font-size: var(--cs-text-size-h2);
+  font-weight: var(--cs-font-weight-semibold);
+  color: var(--cs-text-primary);
+}
+
+.cs-dialog-body {
+  padding: var(--cs-space-5);
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+  font-size: var(--cs-text-size-body);
+  color: var(--cs-stone-300);
+}
+
+.cs-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cs-space-2-5);
+  padding: var(--cs-space-3) var(--cs-space-5);
+  background-color: var(--cs-obsidian-900);
+  border-top: 1px solid var(--cs-border-default);
+}
+
+/* DRAWER (SLIDE-OVER FOR CONTEXTUAL INVESTIGATION) */
+.cs-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: var(--cs-bg-overlay);
+  z-index: var(--cs-z-drawer);
+  animation: cs-fade-in var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+.cs-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--cs-obsidian-900);
+  border-left: 1px solid var(--cs-border-default);
+  box-shadow: var(--cs-elevation-overlay);
+  z-index: var(--cs-z-drawer);
+  display: flex;
+  flex-direction: column;
+  animation: cs-slide-in-right var(--cs-duration-normal) var(--cs-ease-default);
+}
+
+.cs-drawer-lg {
+  max-width: 680px;
+}
+
+.cs-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cs-space-4) var(--cs-space-5);
+  border-bottom: 1px solid var(--cs-border-default);
+  background-color: var(--cs-obsidian-850);
+}
+
+.cs-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--cs-space-5);
+}
+
+.cs-drawer-footer {
+  padding: var(--cs-space-3) var(--cs-space-5);
+  border-top: 1px solid var(--cs-border-default);
+  background-color: var(--cs-obsidian-850);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cs-space-2);
+}
+
+/* TOOLTIP */
+.cs-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.cs-tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--cs-obsidian-800);
+  color: var(--cs-text-primary);
+  border: 1px solid var(--cs-obsidian-700);
+  padding: 4px 8px;
+  border-radius: var(--cs-radius-sm);
+  font-size: var(--cs-text-size-caption);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: var(--cs-z-tooltip);
+  box-shadow: var(--cs-elevation-subtle);
+  animation: cs-fade-in var(--cs-duration-fast) var(--cs-ease-default);
+}
+
+/* ACCORDION */
+.cs-accordion-item {
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-md);
+  margin-bottom: var(--cs-space-2);
+  background-color: var(--cs-obsidian-900);
+  overflow: hidden;
+}
+
+.cs-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cs-space-3) var(--cs-space-4);
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--cs-text-primary);
+  font-weight: var(--cs-font-weight-medium);
+  font-size: var(--cs-text-size-body);
+}
+
+.cs-accordion-header:hover {
+  background-color: var(--cs-bg-hover);
+}
+
+.cs-accordion-content {
+  padding: var(--cs-space-3) var(--cs-space-4);
+  border-top: 1px solid var(--cs-border-subtle);
+  font-size: var(--cs-text-size-body-sm);
+  color: var(--cs-stone-300);
+}
+
+/* KEYFRAME ANIMATIONS */
+@keyframes cs-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cs-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cs-slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}

@@ -5,19 +5,30 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-function Dashboard() {
+function Dashboard({ onNavigate }) {
   return (
     <main className="dashboard">
+
+      {/* Dashboard Header */}
+
       <section className="dashboard-header">
         <div>
           <h2>Investigation Overview</h2>
-          <p>Monitor insurance claims and identify priority investigations.</p>
+          <p>
+            Monitor insurance claims and identify priority investigations.
+          </p>
         </div>
 
-        <button className="new-claim-btn">
+        <button
+          className="new-claim-btn"
+          onClick={() => onNavigate && onNavigate("new-claim")}
+        >
           + New Claim
         </button>
       </section>
+
+
+      {/* Statistics */}
 
       <section className="stats-grid">
 
@@ -33,6 +44,7 @@ function Dashboard() {
           </div>
         </div>
 
+
         <div className="stat-card">
           <div className="stat-icon orange">
             <AlertTriangle size={22} />
@@ -45,6 +57,7 @@ function Dashboard() {
           </div>
         </div>
 
+
         <div className="stat-card">
           <div className="stat-icon red">
             <ShieldAlert size={22} />
@@ -56,6 +69,7 @@ function Dashboard() {
             <span>Manual investigation</span>
           </div>
         </div>
+
 
         <div className="stat-card">
           <div className="stat-icon purple">
@@ -71,16 +85,30 @@ function Dashboard() {
 
       </section>
 
+
+      {/* Priority Investigations */}
+
       <section className="priority-section">
 
         <div className="section-title">
+
           <div>
             <h2>Priority Investigations</h2>
-            <p>Claims that require your immediate attention.</p>
+            <p>
+              Claims that require your immediate attention.
+            </p>
           </div>
 
-          <button>View All</button>
+          <button
+            onClick={() => onNavigate && onNavigate("claims")}
+          >
+            View All
+          </button>
+
         </div>
+
+
+        {/* Claims Table */}
 
         <div className="claims-table">
 
@@ -92,6 +120,7 @@ function Dashboard() {
             <span>Status</span>
           </div>
 
+
           <div className="claim-row">
             <span>CLM001</span>
             <span>TN01 AB 1234</span>
@@ -100,6 +129,7 @@ function Dashboard() {
             <span className="status review">Review</span>
           </div>
 
+
           <div className="claim-row">
             <span>CLM002</span>
             <span>TN02 CD 5678</span>
@@ -107,6 +137,7 @@ function Dashboard() {
             <span>81%</span>
             <span className="status review">Review</span>
           </div>
+
 
           <div className="claim-row">
             <span>CLM003</span>
@@ -119,6 +150,7 @@ function Dashboard() {
         </div>
 
       </section>
+
     </main>
   );
 }

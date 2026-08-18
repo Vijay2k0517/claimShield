@@ -7,11 +7,14 @@ import {
   Settings,
 } from "lucide-react";
 
-function Sidebar() {
+function Sidebar({ currentPage, onNavigate }) {
   return (
     <aside className="sidebar">
+
+      {/* Logo */}
       <div className="logo">
         <div className="logo-icon">C</div>
+
         <div>
           <h2>ClaimShield</h2>
           <span>AI</span>
@@ -19,52 +22,97 @@ function Sidebar() {
       </div>
 
       <nav className="sidebar-menu">
+
         <p className="menu-title">MAIN MENU</p>
 
-        <a href="#" className="menu-item active">
+        {/* Dashboard */}
+        <button
+          className={`menu-item ${
+            currentPage === "dashboard" ? "active" : ""
+          }`}
+          onClick={() => onNavigate("dashboard")}
+        >
           <LayoutDashboard size={20} />
           <span>Dashboard</span>
-        </a>
+        </button>
 
-        <a href="#" className="menu-item">
+        {/* Claims Queue */}
+        <button
+          className={`menu-item ${
+            currentPage === "claims" ? "active" : ""
+          }`}
+          onClick={() => onNavigate("claims")}
+        >
           <ClipboardList size={20} />
           <span>Claims Queue</span>
-        </a>
+        </button>
 
-        <a href="#" className="menu-item">
+        {/* New Claim */}
+        <button
+          className={`menu-item ${
+            currentPage === "new-claim" ? "active" : ""
+          }`}
+          onClick={() => onNavigate("new-claim")}
+        >
           <FilePlus size={20} />
           <span>New Claim</span>
-        </a>
+        </button>
 
         <p className="menu-title">ANALYSIS</p>
 
-        <a href="#" className="menu-item">
+        {/* Analytics */}
+        <button
+          className={`menu-item ${
+            currentPage === "analytics" ? "active" : ""
+          }`}
+          onClick={() => onNavigate("analytics")}
+        >
           <BarChart3 size={20} />
           <span>Analytics</span>
-        </a>
+        </button>
 
-        <a href="#" className="menu-item">
+        {/* Models */}
+        <button
+          className={`menu-item ${
+            currentPage === "models" ? "active" : ""
+          }`}
+          onClick={() => onNavigate("models")}
+        >
           <Brain size={20} />
           <span>Models</span>
-        </a>
+        </button>
 
         <p className="menu-title">SYSTEM</p>
 
-        <a href="#" className="menu-item">
+        {/* Settings */}
+        <button
+          className={`menu-item ${
+            currentPage === "settings" ? "active" : ""
+          }`}
+          onClick={() => onNavigate("settings")}
+        >
           <Settings size={20} />
           <span>Settings</span>
-        </a>
+        </button>
+
       </nav>
 
+      {/* System Status */}
       <div className="sidebar-bottom">
+
         <div className="system-status">
+
           <span className="status-dot"></span>
+
           <div>
             <strong>System Online</strong>
             <small>AI services operational</small>
           </div>
+
         </div>
+
       </div>
+
     </aside>
   );
 }

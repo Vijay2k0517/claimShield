@@ -1,28 +1,46 @@
+import { ShieldAlert, AlertTriangle, ShieldCheck } from "lucide-react";
+
 /**
  * RiskBadge Component
- * Displays the risk level (HIGH, MEDIUM, LOW) with consistent color-coding
- * and optional fraud probability percentage.
+ * Displays the risk level (HIGH, REVIEW/MEDIUM, LOW) with glow borders, icons,
+ * and tabular monospace fraud probability percentages.
  */
-function RiskBadge({ risk = "LOW", probability, className = "" }) {
+function RiskBadge({ risk = "LOW", probability, showIcon = true, className = "" }) {
   const normalizedRisk = (risk || "LOW").toUpperCase();
 
-  // Determine CSS class based on risk level
-  const getRiskClass = () => {
+  const getRiskDetails = () => {
     switch (normalizedRisk) {
       case "HIGH":
-        return "risk high";
+        return {
+          cssClass: "risk high",
+          icon: <ShieldAlert size={13} />
+        };
+      case "REVIEW":
       case "MEDIUM":
-        return "risk medium";
+        return {
+          cssClass: "risk review",
+          icon: <AlertTriangle size={13} />
+        };
       case "LOW":
       default:
-        return "risk low";
+        return {
+          cssClass: "risk low",
+          icon: <ShieldCheck size={13} />
+        };
     }
   };
 
+  const { cssClass, icon } = getRiskDetails();
+
   return (
-    <span className={`${getRiskClass()} ${className}`.trim()}>
-      {normalizedRisk}
-      {probability !== undefined && probability !== null ? ` • ${probability}%` : ""}
+    <span className={`${cssClass} ${className}`.trim()}>
+      {showIcon && icon}
+      <span>{normalizedRisk === "MEDIUM" ? "REVIEW" : normalizedRisk}</span>
+      {probability !== undefined && probability !== null && (
+        <span style={{ opacity: 0.9, marginLeft: "2px" }}>
+          {probability}%
+        </span>
+      )}
     </span>
   );
 }

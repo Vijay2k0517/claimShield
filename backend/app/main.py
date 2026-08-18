@@ -29,11 +29,16 @@ async def lifespan(app: FastAPI):
     # Initialize DB connection pool
     await db_manager.connect()
     
-    # Initialize MongoDB collection indexes
-    await init_indexes()
-
-    # Seed canonical claims if database is currently empty
-    await seed_database(force=False)
+    if db_manager.is_connected:
+        try:
+            # Initialize MongoDB collection indexes
+            await init_indexes()
+            # Seed canonical claims if database is currently empty
+            await seed_database(force=False)
+        except Exception as e:
+            logger.warning(f"MongoDB post-connection initialization skipped: {e}")
+    else:
+        logger.info("Operating in resilient in-memory mode (MongoDB offline).")
     
     # Ensure upload directory exists
     os.makedirs(settings.UPLOAD_PATH, exist_ok=True)

@@ -59,8 +59,13 @@ venv/
 .venv/
 env/
 *.sqlite3
+.pytest_cache/
+backend/data/
+backend/uploads/
+backend/venv/
 
 # Temporary / Scratch files
 .scratch/
 tmp/
 temp/
+

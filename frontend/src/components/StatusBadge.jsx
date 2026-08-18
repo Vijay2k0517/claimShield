@@ -1,6 +1,6 @@
 /**
  * StatusBadge Component
- * Renders standardized status pills for claims (Review, Pending, Escalated, Legitimate).
+ * Standardized status badge for claims (Review, Pending, Escalated, Legitimate).
  */
 function StatusBadge({ status = "Review", className = "" }) {
   const normalizedStatus = (status || "Review").toLowerCase();
@@ -13,7 +13,7 @@ function StatusBadge({ status = "Review", className = "" }) {
       return "status pending";
     }
     if (normalizedStatus.includes("escalat")) {
-      return "status high"; // Uses alert styling
+      return "status escalated";
     }
     if (normalizedStatus.includes("legit") || normalizedStatus.includes("approv")) {
       return "status legitimate";

@@ -1,71 +1,90 @@
 import { useEffect, useState } from "react";
 import {
-  CheckCircle,
-  XCircle,
+  CheckCircle2,
   AlertTriangle,
-  ArrowLeft,
   ShieldAlert,
+  Clock,
+  Send,
+  Shield
 } from "lucide-react";
-
 import { getClaimById, saveDecision } from "../services/api";
-import LoadingState from "../components/LoadingState";
+import RiskBadge from "../components/RiskBadge";
+import StatusBadge from "../components/StatusBadge";
+import InvestigationNav from "../components/InvestigationNav";
 
-function Decision({ claimId, onNavigate }) {
+function Decision({ claimId = "CLM001", onNavigate, showToast }) {
   const [claim, setClaim] = useState(null);
   const [decision, setDecision] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const noteTemplates = [
+    "Damage geometry and impact vector align with police collision report.",
+    "Photograph timestamp and geolocation contradict reported accident timeline.",
+    "Bumper bracket damage exhibits identical tooling marks to prior settled claim.",
+    "Supplemental itemized teardown estimate requested from certified repair facility."
+  ];
 
   useEffect(() => {
-    const loadClaim = async () => {
-      const data = await getClaimById(claimId);
-      setClaim(data);
+    let isMounted = true;
+    setLoading(true);
 
-      if (data?.decision) {
-        setDecision(data.decision);
+    async function loadData() {
+      try {
+        const data = await getClaimById(claimId || "CLM001");
+        if (isMounted && data) {
+          setClaim(data);
+          if (data.decision) {
+            setDecision(data.decision.decision || "");
+            setNotes(data.decision.notes || "");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load claim for decision:", err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-
-      if (data?.notes) {
-        setNotes(data.notes);
-      }
-    };
-
-    if (claimId) {
-      loadClaim();
     }
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
   }, [claimId]);
 
-  if (!claim) {
+  if (loading || !claim) {
     return (
       <main className="investigation-page">
-        <LoadingState message="Loading decision workspace..." />
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "20px 0" }}>
+          <div className="skeleton" style={{ height: "36px", width: "35%" }} />
+          <div className="skeleton" style={{ height: "400px", width: "100%" }} />
+        </div>
       </main>
     );
   }
 
   const handleSaveDecision = async () => {
     if (!decision) {
-      alert("Please select an investigator decision.");
+      alert("Please select an investigator adjudication decision.");
       return;
     }
 
     setSaving(true);
-
     try {
-      await saveDecision(claim.claim_id, {
+      const updated = await saveDecision(claim.claim_id, {
         decision,
-        notes,
+        notes: notes || `Adjudicated as '${decision}' by SIU Investigator.`,
+        investigator_id: "INV-8402"
       });
 
-      setSaved(true);
-
-      setTimeout(() => {
-        setSaved(false);
-      }, 3000);
+      setClaim(updated);
+      if (showToast) {
+        showToast(`Adjudication successfully recorded: ${decision}`, "success");
+      }
     } catch (error) {
       console.error("Failed to save decision:", error);
-      alert("Unable to save decision.");
+      alert("Unable to save decision. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -73,355 +92,306 @@ function Decision({ claimId, onNavigate }) {
 
   return (
     <main className="investigation-page">
+      {/* Top Header & Sub-Navigation */}
+      <div style={{ marginBottom: "20px" }}>
+        <div className="investigation-header" style={{ marginBottom: "14px" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <h2>Adjudication Decision & Audit Log</h2>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontWeight: "700",
+                  fontSize: "0.85rem",
+                  color: "var(--primary)",
+                  background: "var(--primary-light)",
+                  padding: "2px 8px",
+                  borderRadius: "var(--radius-sm)",
+                  border: "1px solid var(--primary-border)"
+                }}
+              >
+                {claim.claim_id}
+              </span>
+            </div>
+            <p>
+              Record final adjuster determination, attach investigation rationale, and update compliance audit records.
+            </p>
+          </div>
 
-      {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <StatusBadge status={claim.status} />
+            <RiskBadge risk={claim.risk_level} probability={claim.fraud_probability} />
+          </div>
+        </div>
+
+        {/* Standardized Sub-Navigation */}
+        <InvestigationNav
+          currentTab="decision"
+          claimId={claim.claim_id}
+          similarCount={claim.similar_claims?.length || 0}
+          onNavigate={onNavigate}
+        />
+      </div>
+
+      {/* Human-in-the-Loop Governance Notice */}
       <div
         style={{
+          background: "#eff6ff",
+          border: "1px solid #bfdbfe",
+          borderRadius: "var(--radius-md)",
+          padding: "12px 16px",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "20px",
+          gap: "10px",
+          marginBottom: "20px"
         }}
       >
-        <button
-          onClick={() =>
-            onNavigate && onNavigate("investigation", claim.claim_id)
-          }
+        <Shield size={18} style={{ color: "var(--primary)", flexShrink: 0 }} />
+        <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.35" }}>
+          <strong style={{ color: "var(--text-primary)" }}>Investigator Decision Authority:</strong> ClaimShield AI assessments serve as decision-support telemetry. Final settlement, denial, or SIU referral is certified by the licensed claims officer.
+        </div>
+      </div>
+
+      {/* Main 2-Column Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.65fr 1fr", gap: "20px", marginBottom: "28px" }}>
+        {/* Left Column: Decision Selection & Notes */}
+        <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            background: "none",
-            border: "none",
-            color: "#2563eb",
-            fontSize: "13px",
-            fontWeight: "600",
-            cursor: "pointer",
+            background: "#ffffff",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-lg)",
+            padding: "20px",
+            boxShadow: "var(--shadow-card)"
           }}
         >
-          <ArrowLeft size={16} />
-          Back to Investigation
-        </button>
-      </div>
-
-      {/* Page Header */}
-      <div className="investigation-header">
-        <div>
-          <h2>Investigator Decision</h2>
-          <p>
-            Review the AI assessment and record the final claim decision.
-          </p>
-        </div>
-
-        <span className="investigation-status">
-          {claim.status || "Under Review"}
-        </span>
-      </div>
-
-      {/* Claim Summary */}
-      <section className="claim-info-card">
-
-        <div>
-          <small>Claim ID</small>
-          <strong>{claim.claim_id}</strong>
-        </div>
-
-        <div>
-          <small>Vehicle</small>
-          <strong>{claim.vehicle_number}</strong>
-        </div>
-
-        <div>
-          <small>Risk Level</small>
-          <strong>{claim.risk_level}</strong>
-        </div>
-
-        <div>
-          <small>Fraud Probability</small>
-          <strong>{claim.fraud_probability}%</strong>
-        </div>
-
-      </section>
-
-      {/* AI Recommendation */}
-      <section className="assessment-card" style={{ marginTop: "20px" }}>
-
-        <div className="card-heading">
-          <div>
-            <h3>AI Recommendation</h3>
-            <p>Model-generated assessment for this claim.</p>
-          </div>
-
-          <ShieldAlert size={20} />
-        </div>
-
-        <div className="risk-result">
-
-          <div className="risk-circle">
-            {claim.fraud_probability}%
-          </div>
-
-          <div>
-            <span className="high-risk-label">
-              {claim.risk_level} RISK
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+            <h3 style={{ fontSize: "1rem" }}>Select Adjudication Action</h3>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              Investigator: <strong>Sarah Jenkins (INV-8402)</strong>
             </span>
-
-            <h2>
-              {claim.fraud_probability}% Fraud Probability
-            </h2>
-
-            <p>
-              {claim.recommendation}
-            </p>
           </div>
 
-        </div>
+          {/* 3 Decision Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "18px" }}>
+            {/* 1. Mark Legitimate */}
+            <div
+              onClick={() => setDecision("Mark Legitimate")}
+              style={{
+                padding: "14px 10px",
+                borderRadius: "var(--radius-md)",
+                background: decision === "Mark Legitimate" ? "#ecfdf5" : "var(--bg-canvas)",
+                border: `2px solid ${decision === "Mark Legitimate" ? "var(--risk-low)" : "var(--border-color)"}`,
+                cursor: "pointer",
+                textAlign: "center"
+              }}
+            >
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--risk-low)", margin: "0 auto 8px", boxShadow: "var(--shadow-xs)" }}>
+                <CheckCircle2 size={18} />
+              </div>
+              <strong style={{ fontSize: "0.82rem", color: "var(--text-primary)", display: "block", marginBottom: "2px" }}>
+                Approve Claim
+              </strong>
+              <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: "1.2" }}>
+                Clear for payout. Document false positive context.
+              </p>
+            </div>
 
-        {claim.flag_reasons?.length > 0 && (
-          <div className="reason-box">
+            {/* 2. Request Evidence */}
+            <div
+              onClick={() => setDecision("Request Additional Evidence")}
+              style={{
+                padding: "14px 10px",
+                borderRadius: "var(--radius-md)",
+                background: decision === "Request Additional Evidence" ? "#fffbeb" : "var(--bg-canvas)",
+                border: `2px solid ${decision === "Request Additional Evidence" ? "var(--risk-review)" : "var(--border-color)"}`,
+                cursor: "pointer",
+                textAlign: "center"
+              }}
+            >
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--risk-review)", margin: "0 auto 8px", boxShadow: "var(--shadow-xs)" }}>
+                <AlertTriangle size={18} />
+              </div>
+              <strong style={{ fontSize: "0.82rem", color: "var(--text-primary)", display: "block", marginBottom: "2px" }}>
+                Request Info
+              </strong>
+              <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: "1.2" }}>
+                Hold for dashcam, shop teardown, or metadata.
+              </p>
+            </div>
 
-            <h4>
-              <AlertTriangle size={17} />
-              Key Investigation Findings
-            </h4>
+            {/* 3. Escalate SIU */}
+            <div
+              onClick={() => setDecision("Escalate Investigation")}
+              style={{
+                padding: "14px 10px",
+                borderRadius: "var(--radius-md)",
+                background: decision === "Escalate Investigation" ? "#fff1f2" : "var(--bg-canvas)",
+                border: `2px solid ${decision === "Escalate Investigation" ? "var(--risk-high)" : "var(--border-color)"}`,
+                cursor: "pointer",
+                textAlign: "center"
+              }}
+            >
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--risk-high)", margin: "0 auto 8px", boxShadow: "var(--shadow-xs)" }}>
+                <ShieldAlert size={18} />
+              </div>
+              <strong style={{ fontSize: "0.82rem", color: "var(--text-primary)", display: "block", marginBottom: "2px" }}>
+                Refer to SIU
+              </strong>
+              <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: "1.2" }}>
+                Transfer to Special Investigation Unit for field audit.
+              </p>
+            </div>
+          </div>
 
-            <ul>
-              {claim.flag_reasons.map((reason, index) => (
-                <li key={index}>{reason}</li>
+          {/* Quick Rationale Chips */}
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+              <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-primary)" }}>
+                Quick Rationale Templates
+              </label>
+              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                Click to insert into notes
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {noteTemplates.map((template, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setNotes(template)}
+                  style={{
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-color)",
+                    color: "var(--text-secondary)",
+                    fontSize: "0.72rem",
+                    padding: "4px 8px",
+                    borderRadius: "var(--radius-sm)",
+                    textAlign: "left"
+                  }}
+                >
+                  &ldquo;{template.substring(0, 42)}...&rdquo;
+                </button>
               ))}
-            </ul>
-
-          </div>
-        )}
-
-      </section>
-
-      {/* Decision Section */}
-      <section
-        className="claim-form-card"
-        style={{ marginTop: "20px" }}
-      >
-
-        <div className="form-section-title">
-
-          <ShieldAlert size={20} />
-
-          <div>
-            <h3>Final Investigator Decision</h3>
-            <p>
-              Select the appropriate action based on the investigation.
-            </p>
+            </div>
           </div>
 
+          {/* Notes Textarea */}
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "4px" }}>
+              Investigator Rationale & Audit Notes
+            </label>
+            <textarea
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Enter detailed reasons, evidence verification steps, and next actions..."
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                background: "var(--bg-canvas)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.82rem",
+                color: "var(--text-primary)",
+                outline: "none"
+              }}
+            />
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button
+              className="btn-secondary"
+              onClick={() => onNavigate && onNavigate("claims")}
+            >
+              &larr; Claims Directory
+            </button>
+
+            <button
+              className="btn-primary"
+              disabled={saving || !decision}
+              onClick={handleSaveDecision}
+            >
+              <Send size={14} />
+              {saving ? "Saving..." : "Save Adjudication & Update Status"}
+            </button>
+          </div>
         </div>
 
-        {/* Decision Buttons */}
+        {/* Right Column: Compliance Audit Trail */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "15px",
-            marginTop: "20px",
+            background: "#ffffff",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-lg)",
+            padding: "20px",
+            boxShadow: "var(--shadow-card)"
           }}
         >
-
-          {/* Approve */}
-          <button
-            type="button"
-            onClick={() => setDecision("Approved")}
-            style={{
-              padding: "20px",
-              borderRadius: "10px",
-              border:
-                decision === "Approved"
-                  ? "2px solid #16a34a"
-                  : "1px solid #e2e8f0",
-              background:
-                decision === "Approved"
-                  ? "#f0fdf4"
-                  : "#ffffff",
-              cursor: "pointer",
-              textAlign: "left",
-            }}
-          >
-            <CheckCircle
-              size={25}
-              style={{ color: "#16a34a" }}
-            />
-
-            <h4 style={{ margin: "10px 0 5px" }}>
-              Approve Claim
-            </h4>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: "12px",
-                color: "#64748b",
-              }}
-            >
-              Claim appears legitimate and can proceed.
-            </p>
-          </button>
-
-          {/* Reject */}
-          <button
-            type="button"
-            onClick={() => setDecision("Rejected")}
-            style={{
-              padding: "20px",
-              borderRadius: "10px",
-              border:
-                decision === "Rejected"
-                  ? "2px solid #dc2626"
-                  : "1px solid #e2e8f0",
-              background:
-                decision === "Rejected"
-                  ? "#fef2f2"
-                  : "#ffffff",
-              cursor: "pointer",
-              textAlign: "left",
-            }}
-          >
-            <XCircle
-              size={25}
-              style={{ color: "#dc2626" }}
-            />
-
-            <h4 style={{ margin: "10px 0 5px" }}>
-              Reject Claim
-            </h4>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: "12px",
-                color: "#64748b",
-              }}
-            >
-              Evidence indicates the claim is potentially fraudulent.
-            </p>
-          </button>
-
-          {/* Escalate */}
-          <button
-            type="button"
-            onClick={() => setDecision("Escalated")}
-            style={{
-              padding: "20px",
-              borderRadius: "10px",
-              border:
-                decision === "Escalated"
-                  ? "2px solid #d97706"
-                  : "1px solid #e2e8f0",
-              background:
-                decision === "Escalated"
-                  ? "#fffbeb"
-                  : "#ffffff",
-              cursor: "pointer",
-              textAlign: "left",
-            }}
-          >
-            <AlertTriangle
-              size={25}
-              style={{ color: "#d97706" }}
-            />
-
-            <h4 style={{ margin: "10px 0 5px" }}>
-              Escalate Claim
-            </h4>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: "12px",
-                color: "#64748b",
-              }}
-            >
-              Send the claim for further investigation.
-            </p>
-          </button>
-
-        </div>
-
-        {/* Notes */}
-        <div
-          className="form-group"
-          style={{ marginTop: "25px" }}
-        >
-
-          <label>Investigator Notes</label>
-
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Enter your investigation notes..."
-            rows="5"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding: "12px",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              resize: "vertical",
-              fontFamily: "inherit",
-              fontSize: "13px",
-            }}
-          />
-
-        </div>
-
-        {/* Save */}
-        <div
-          className="form-actions"
-          style={{ marginTop: "20px" }}
-        >
-
-          <button
-            className="cancel-btn"
-            type="button"
-            onClick={() =>
-              onNavigate &&
-              onNavigate("investigation", claim.claim_id)
-            }
-          >
-            Cancel
-          </button>
-
-          <button
-            className="analyze-btn"
-            type="button"
-            onClick={handleSaveDecision}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Decision"}
-          </button>
-
-        </div>
-
-        {/* Success */}
-        {saved && (
-          <div
-            style={{
-              marginTop: "15px",
-              padding: "12px",
-              borderRadius: "8px",
-              background: "#f0fdf4",
-              border: "1px solid #bbf7d0",
-              color: "#15803d",
-              fontSize: "13px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <CheckCircle size={17} />
-            Decision saved successfully.
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Clock size={16} style={{ color: "var(--primary)" }} />
+              <h3 style={{ fontSize: "0.95rem" }}>Compliance Audit Trail</h3>
+            </div>
+            <span style={{ fontSize: "0.72rem", color: "var(--risk-low)", fontWeight: "600" }}>
+              VERIFIED
+            </span>
           </div>
-        )}
 
-      </section>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+              <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#eff6ff", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: "700", flexShrink: 0 }}>
+                1
+              </div>
+              <div>
+                <strong style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>Claim Ingestion & Validation</strong>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "1px" }}>
+                  Image binary verification passed • {claim.submission_date}
+                </div>
+              </div>
+            </div>
 
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+              <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#fff1f2", color: "var(--risk-high)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: "700", flexShrink: 0 }}>
+                2
+              </div>
+              <div>
+                <strong style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>AI Vision & Heatmap Scoring</strong>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "1px" }}>
+                  Fraud Risk: {claim.fraud_probability}% ({claim.risk_level}) • ResNet50
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+              <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#f0fdf4", color: "var(--risk-low)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: "700", flexShrink: 0 }}>
+                3
+              </div>
+              <div>
+                <strong style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>Historical Duplicate Cross-Check</strong>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "1px" }}>
+                  128-dim vector embeddings checked against claim database
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+              <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: claim.decision ? "#ecfdf5" : "#f1f5f9", color: claim.decision ? "var(--risk-low)" : "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: "700", flexShrink: 0 }}>
+                4
+              </div>
+              <div>
+                <strong style={{ fontSize: "0.8rem", color: claim.decision ? "var(--risk-low)" : "var(--text-muted)" }}>
+                  {claim.decision ? `Adjudicated: ${claim.decision.decision}` : "Pending Investigator Adjudication"}
+                </strong>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "1px" }}>
+                  {claim.decision ? `Signed by ${claim.decision.investigator_id || "INV-8402"} on ${new Date(claim.decision.timestamp).toLocaleDateString()}` : "Awaiting review"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

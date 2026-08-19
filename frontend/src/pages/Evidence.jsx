@@ -4,7 +4,7 @@ import {
   Sliders,
   Columns
 } from "lucide-react";
-import { getClaimById } from "../services/api";
+import { getClaimById, getMediaUrl } from "../services/api";
 import RiskBadge from "../components/RiskBadge";
 import StatusBadge from "../components/StatusBadge";
 import InvestigationNav from "../components/InvestigationNav";
@@ -41,9 +41,9 @@ function Evidence({ claimId = "CLM001", onNavigate }) {
   }
 
   const evidence = claim.evidence || {};
-  const originalImage = evidence.original_image || "https://images.unsplash.com/photo-1590362891991-f776e747a588";
-  const heatmapImage = evidence.heatmap || evidence.overlay || originalImage;
-  const overlayImage = evidence.overlay || originalImage;
+  const originalImage = getMediaUrl(evidence.original_image);
+  const heatmapImage = getMediaUrl(evidence.heatmap || evidence.overlay || evidence.original_image);
+  const overlayImage = getMediaUrl(evidence.overlay || evidence.original_image);
 
   const inspectionPoints = [
     {
@@ -203,7 +203,7 @@ function Evidence({ claimId = "CLM001", onNavigate }) {
                     height: "100%",
                     objectFit: "cover",
                     opacity: opacity / 100,
-                    mixBlendMode: "screen"
+                    mixBlendMode: "normal"
                   }}
                 />
 

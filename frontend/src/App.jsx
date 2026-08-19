@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 
 import Dashboard from "./pages/Dashboard";
@@ -67,14 +66,7 @@ function App() {
         </div>
       )}
 
-      {/* Global Sidebar Navigation */}
-      <Sidebar
-        currentPage={currentPage}
-        selectedClaimId={selectedClaimId}
-        onNavigate={handleNavigate}
-      />
-
-      {/* Top Header Hub */}
+      {/* High-UI Responsive Top Navigation */}
       <Navbar
         currentPage={currentPage}
         selectedClaimId={selectedClaimId}

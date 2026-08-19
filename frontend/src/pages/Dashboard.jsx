@@ -48,13 +48,18 @@ function Dashboard({ onNavigate, onViewClaim }) {
     };
   }, []);
 
-  const kpis = summary?.kpis || {
-    total_claims: claims.length || 5,
-    pending_reviews: claims.filter((c) => c.status === "Review").length || 3,
-    high_risk_claims: claims.filter((c) => c.risk_level === "HIGH").length || 3,
-    escalated_claims: claims.filter((c) => c.status === "Escalated").length || 1,
-    avg_fraud_probability: 72.4
+  const kpis = {
+    total_claims: summary?.kpis?.total_claims ?? claims.length,
+    pending_reviews: summary?.kpis?.pending_reviews ?? claims.filter((c) => c.status === "Review").length,
+    high_risk_claims: summary?.kpis?.high_risk_claims ?? claims.filter((c) => c.risk_level === "HIGH").length,
+    escalated_claims: summary?.kpis?.escalated_claims ?? claims.filter((c) => c.status === "Escalated").length,
+    avg_fraud_probability: summary?.kpis?.avg_fraud_probability ?? 0.0
   };
+
+  const lowCount = claims.filter((c) => c.risk_level === "LOW").length;
+  const reviewCount = claims.filter((c) => ["REVIEW", "MEDIUM"].includes(c.risk_level)).length;
+  const highCount = claims.filter((c) => c.risk_level === "HIGH").length;
+  const totalCount = claims.length;
 
   // Top priority claims (sorted by fraud probability descending)
   const priorityClaims = [...claims]
@@ -166,6 +171,17 @@ function Dashboard({ onNavigate, onViewClaim }) {
               <div className="skeleton" style={{ height: "42px" }} />
               <div className="skeleton" style={{ height: "42px" }} />
             </div>
+          ) : priorityClaims.length === 0 ? (
+            <div style={{ padding: "40px 20px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+              <ShieldCheck size={36} style={{ color: "var(--text-muted)", opacity: 0.6 }} />
+              <h4>No claims in queue</h4>
+              <p style={{ fontSize: "0.82rem", maxWidth: "360px" }}>
+                All claims have been processed or the queue is clean. Submit a new claim to run AI scoring.
+              </p>
+              <button className="btn-primary" onClick={() => onNavigate && onNavigate("new-claim")}>
+                + Intake New Claim
+              </button>
+            </div>
           ) : (
             <div className="claims-table">
               <div className="table-header">
@@ -250,11 +266,11 @@ function Dashboard({ onNavigate, onViewClaim }) {
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
                   <span style={{ color: "var(--risk-high)", fontWeight: "600" }}>High Risk (&ge;75%)</span>
                   <span style={{ fontFamily: "var(--font-mono)" }}>
-                    {summary?.risk_distribution?.[2]?.count ?? kpis.high_risk_claims} claims ({summary?.risk_distribution?.[2]?.percentage ?? 40}%)
+                    {highCount} claims ({totalCount > 0 ? Math.round((highCount / totalCount) * 100) : 0}%)
                   </span>
                 </div>
                 <div style={{ background: "#f1f5f9", height: "7px", borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{ width: `${summary?.risk_distribution?.[2]?.percentage ?? 40}%`, height: "100%", background: "var(--risk-high)", borderRadius: "999px" }} />
+                  <div style={{ width: `${totalCount > 0 ? Math.round((highCount / totalCount) * 100) : 0}%`, height: "100%", background: "var(--risk-high)", borderRadius: "999px" }} />
                 </div>
               </div>
 
@@ -262,11 +278,11 @@ function Dashboard({ onNavigate, onViewClaim }) {
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
                   <span style={{ color: "var(--risk-review)", fontWeight: "600" }}>Needs Review (40-74%)</span>
                   <span style={{ fontFamily: "var(--font-mono)" }}>
-                    {summary?.risk_distribution?.[1]?.count ?? kpis.pending_reviews} claims ({summary?.risk_distribution?.[1]?.percentage ?? 40}%)
+                    {reviewCount} claims ({totalCount > 0 ? Math.round((reviewCount / totalCount) * 100) : 0}%)
                   </span>
                 </div>
                 <div style={{ background: "#f1f5f9", height: "7px", borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{ width: `${summary?.risk_distribution?.[1]?.percentage ?? 40}%`, height: "100%", background: "var(--risk-review)", borderRadius: "999px" }} />
+                  <div style={{ width: `${totalCount > 0 ? Math.round((reviewCount / totalCount) * 100) : 0}%`, height: "100%", background: "var(--risk-review)", borderRadius: "999px" }} />
                 </div>
               </div>
 
@@ -274,11 +290,11 @@ function Dashboard({ onNavigate, onViewClaim }) {
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
                   <span style={{ color: "var(--risk-low)", fontWeight: "600" }}>Low Risk (&lt;40%)</span>
                   <span style={{ fontFamily: "var(--font-mono)" }}>
-                    {summary?.risk_distribution?.[0]?.count ?? 1} claims ({summary?.risk_distribution?.[0]?.percentage ?? 20}%)
+                    {lowCount} claims ({totalCount > 0 ? Math.round((lowCount / totalCount) * 100) : 0}%)
                   </span>
                 </div>
                 <div style={{ background: "#f1f5f9", height: "7px", borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{ width: `${summary?.risk_distribution?.[0]?.percentage ?? 20}%`, height: "100%", background: "var(--risk-low)", borderRadius: "999px" }} />
+                  <div style={{ width: `${totalCount > 0 ? Math.round((lowCount / totalCount) * 100) : 0}%`, height: "100%", background: "var(--risk-low)", borderRadius: "999px" }} />
                 </div>
               </div>
             </div>

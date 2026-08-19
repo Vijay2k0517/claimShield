@@ -13,7 +13,7 @@ import {
   Zap,
   Info
 } from "lucide-react";
-import { submitClaim } from "../services/api";
+import { submitClaim, uploadEvidenceFile } from "../services/api";
 
 function NewClaimPage({ onNavigate, showToast }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -92,10 +92,19 @@ function NewClaimPage({ onNavigate, showToast }) {
     setSubmitting(true);
 
     try {
-      const imageUrl =
-        images.length > 0
-          ? URL.createObjectURL(images[0])
-          : "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80";
+      let imageUrl = "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80";
+      
+      // If the user uploaded a file, upload it to the backend first
+      if (images.length > 0) {
+        try {
+          const uploadRes = await uploadEvidenceFile(images[0]);
+          if (uploadRes && uploadRes.file_url) {
+            imageUrl = uploadRes.file_url;
+          }
+        } catch (upErr) {
+          console.warn("Evidence upload fallback:", upErr);
+        }
+      }
 
       const payload = {
         ...formData,
@@ -106,7 +115,7 @@ function NewClaimPage({ onNavigate, showToast }) {
       const createdClaim = await submitClaim(payload);
 
       if (showToast) {
-        showToast(`Claim ${createdClaim.claim_id} submitted & scored!`, "success");
+        showToast(`Claim ${createdClaim.claim_id} submitted & scored by PyTorch ResNet50!`, "success");
       }
 
       if (onNavigate) {

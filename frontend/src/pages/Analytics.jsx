@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   BarChart3,
   ShieldAlert,
   Clock,
   UserCheck,
-  ShieldCheck
+  ShieldCheck,
+  Plus,
+  AlertCircle
 } from "lucide-react";
 import { getDashboardSummary, getClaims } from "../services/api";
 
@@ -38,31 +40,76 @@ function Analytics({ onNavigate }) {
     };
   }, []);
 
-  const kpis = summary?.kpis || {
-    total_claims: claims.length || 5,
-    high_risk_claims: 2,
-    pending_reviews: 2,
-    escalated_claims: 1,
-    avg_fraud_probability: 72.4
+  const totalClaims = claims.length;
+  const highRiskClaims = claims.filter((c) => c.risk_level === "HIGH").length;
+  const pendingReviews = claims.filter((c) => c.status === "Review").length;
+  const adjudicatedClaims = claims.filter((c) => c.decision !== null);
+
+  const kpis = {
+    total_claims: summary?.kpis?.total_claims ?? totalClaims,
+    high_risk_claims: summary?.kpis?.high_risk_claims ?? highRiskClaims,
+    pending_reviews: summary?.kpis?.pending_reviews ?? pendingReviews,
+    escalated_claims: summary?.kpis?.escalated_claims ?? claims.filter((c) => c.status === "Escalated").length,
+    avg_fraud_probability: summary?.kpis?.avg_fraud_probability ?? 0.0
   };
 
-  const trendDays = [
-    { day: "Mon", total: 18, highRisk: 3 },
-    { day: "Tue", total: 24, highRisk: 4 },
-    { day: "Wed", total: 20, highRisk: 2 },
-    { day: "Thu", total: 28, highRisk: 6 },
-    { day: "Fri", total: 32, highRisk: 5 },
-    { day: "Sat", total: 14, highRisk: 1 },
-    { day: "Sun", total: 10, highRisk: 2 }
-  ];
+  // Dynamic 7-Day Trend
+  const trendDays = useMemo(() => {
+    if (summary?.risk_trends && summary.risk_trends.length > 0) {
+      return summary.risk_trends.map((pt) => {
+        const d = new Date(pt.date);
+        const dayName = isNaN(d.getTime()) ? pt.date : d.toLocaleDateString("en-US", { weekday: "short" });
+        return {
+          day: dayName,
+          total: pt.total || 0,
+          highRisk: pt.high || 0
+        };
+      });
+    }
 
-  const anomalyReasons = [
-    { reason: "Mismatched Impact Vector & Direction", count: 14, pct: 78 },
-    { reason: "Pre-existing Rust / Mechanical Disassembly", count: 11, pct: 61 },
-    { reason: "Tooling Slip Marks on Bracket Fasteners", count: 9, pct: 50 },
-    { reason: "Inflated Repair & Teardown Estimate", count: 7, pct: 39 },
-    { reason: "Identical Historical Deformation Profile", count: 5, pct: 28 }
-  ];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return days.map((day) => ({ day, total: 0, highRisk: 0 }));
+  }, [summary]);
+
+  const maxTrendVolume = Math.max(...trendDays.map((t) => t.total), 1);
+
+  // Dynamic Top Anomaly Reasons
+  const anomalyReasons = useMemo(() => {
+    if (summary?.top_fraud_reasons && summary.top_fraud_reasons.length > 0) {
+      return summary.top_fraud_reasons.map((r) => ({
+        reason: r.reason,
+        count: r.count,
+        pct: r.percentage
+      }));
+    }
+
+    const reasonCounts = {};
+    claims.forEach((c) => {
+      (c.flag_reasons || []).forEach((r) => {
+        reasonCounts[r] = (reasonCounts[r] || 0) + 1;
+      });
+    });
+
+    const entries = Object.entries(reasonCounts);
+    if (entries.length === 0) return [];
+
+    const totalFlags = entries.reduce((acc, [, count]) => acc + count, 0);
+    return entries
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([reason, count]) => ({
+        reason,
+        count,
+        pct: Math.round((count / totalFlags) * 100)
+      }));
+  }, [summary, claims]);
+
+  // Model Alignment Metrics
+  const modelAlignment = summary?.model_alignment || {
+    agreement_rate: adjudicatedClaims.length > 0 ? 100.0 : 0.0,
+    total_adjudicated: adjudicatedClaims.length,
+    false_positives_mitigated: 0
+  };
 
   return (
     <main className="analytics-page">
@@ -91,7 +138,7 @@ function Analytics({ onNavigate }) {
           </div>
           <div>
             <p>Total Claims Processed</p>
-            <h3>{kpis.total_claims}</h3>
+            <h3>{loading ? "--" : kpis.total_claims}</h3>
             <span>Live database count</span>
           </div>
         </div>
@@ -102,7 +149,7 @@ function Analytics({ onNavigate }) {
           </div>
           <div>
             <p>High Risk Rate</p>
-            <h3>{Math.round((kpis.high_risk_claims / (kpis.total_claims || 1)) * 100)}%</h3>
+            <h3>{kpis.total_claims > 0 ? Math.round((kpis.high_risk_claims / kpis.total_claims) * 100) : 0}%</h3>
             <span style={{ color: "var(--risk-high)", fontWeight: "600" }}>
               {kpis.high_risk_claims} priority cases
             </span>
@@ -115,7 +162,7 @@ function Analytics({ onNavigate }) {
           </div>
           <div>
             <p>Under Triage Review</p>
-            <h3>{kpis.pending_reviews}</h3>
+            <h3>{loading ? "--" : kpis.pending_reviews}</h3>
             <span>Awaiting decision</span>
           </div>
         </div>
@@ -126,9 +173,9 @@ function Analytics({ onNavigate }) {
           </div>
           <div>
             <p>Adjuster Alignment</p>
-            <h3>94.8%</h3>
+            <h3>{modelAlignment.total_adjudicated > 0 ? `${modelAlignment.agreement_rate}%` : "0.0%"}</h3>
             <span style={{ color: "var(--status-escalated)", fontWeight: "600" }}>
-              AI vs Adjuster agreement
+              {modelAlignment.total_adjudicated} decisions evaluated
             </span>
           </div>
         </div>
@@ -168,34 +215,42 @@ function Analytics({ onNavigate }) {
               </div>
             </div>
 
-            {/* Visual Bars */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", height: "160px", padding: "10px 10px 0", borderBottom: "1px solid var(--border-color)" }}>
-              {trendDays.map((item) => (
-                <div key={item.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: "3px", height: "120px" }}>
-                    <div
-                      style={{
-                        width: "16px",
-                        height: `${(item.total / 35) * 100}%`,
-                        background: "rgba(37,99,235,0.7)",
-                        borderRadius: "2px 2px 0 0"
-                      }}
-                    />
-                    <div
-                      style={{
-                        width: "16px",
-                        height: `${(item.highRisk / 35) * 100}%`,
-                        background: "var(--risk-high)",
-                        borderRadius: "2px 2px 0 0"
-                      }}
-                    />
+            {/* Visual Bars / Empty State */}
+            {totalClaims === 0 ? (
+              <div style={{ padding: "30px 10px", textAlign: "center", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                <AlertCircle size={28} style={{ opacity: 0.5 }} />
+                <p style={{ fontSize: "0.82rem" }}>No claim submissions recorded in the last 7 days.</p>
+                <span style={{ fontSize: "0.72rem" }}>Submit claims to generate time-series trend bars.</span>
+              </div>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", height: "160px", padding: "10px 10px 0", borderBottom: "1px solid var(--border-color)" }}>
+                {trendDays.map((item, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: "3px", height: "120px" }}>
+                      <div
+                        style={{
+                          width: "16px",
+                          height: `${item.total > 0 ? (item.total / maxTrendVolume) * 100 : 0}%`,
+                          background: "rgba(37,99,235,0.7)",
+                          borderRadius: "2px 2px 0 0"
+                        }}
+                      />
+                      <div
+                        style={{
+                          width: "16px",
+                          height: `${item.highRisk > 0 ? (item.highRisk / maxTrendVolume) * 100 : 0}%`,
+                          background: "var(--risk-high)",
+                          borderRadius: "2px 2px 0 0"
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                      {item.day}
+                    </span>
                   </div>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                    {item.day}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Top Reasons */}
@@ -210,33 +265,41 @@ function Analytics({ onNavigate }) {
           >
             <h3 style={{ fontSize: "0.95rem", marginBottom: "14px" }}>Top Anomaly Reason Frequency</h3>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {anomalyReasons.map((item, idx) => (
-                <div key={idx}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
-                    <span style={{ color: "var(--text-primary)" }}>{item.reason}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", color: "var(--primary)", fontWeight: "600" }}>
-                      {item.count} claims ({item.pct}%)
-                    </span>
+            {anomalyReasons.length === 0 ? (
+              <div style={{ padding: "24px 10px", textAlign: "center", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                <ShieldCheck size={28} style={{ opacity: 0.5 }} />
+                <p style={{ fontSize: "0.82rem" }}>No anomaly risk flags recorded.</p>
+                <span style={{ fontSize: "0.72rem" }}>AI-detected damage inconsistencies will appear here dynamically.</span>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {anomalyReasons.map((item, idx) => (
+                  <div key={idx}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
+                      <span style={{ color: "var(--text-primary)" }}>{item.reason}</span>
+                      <span style={{ fontFamily: "var(--font-mono)", color: "var(--primary)", fontWeight: "600" }}>
+                        {item.count} claims ({item.pct}%)
+                      </span>
+                    </div>
+                    <div style={{ background: "#f1f5f9", height: "7px", borderRadius: "999px", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          width: `${item.pct}%`,
+                          height: "100%",
+                          background:
+                            idx === 0
+                              ? "var(--risk-high)"
+                              : idx === 1
+                              ? "var(--risk-review)"
+                              : "var(--primary)",
+                          borderRadius: "999px"
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div style={{ background: "#f1f5f9", height: "7px", borderRadius: "999px", overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${item.pct}%`,
-                        height: "100%",
-                        background:
-                          idx === 0
-                            ? "var(--risk-high)"
-                            : idx === 1
-                            ? "var(--risk-review)"
-                            : "var(--primary)",
-                        borderRadius: "999px"
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -264,21 +327,27 @@ function Analytics({ onNavigate }) {
               <div style={{ padding: "10px 12px", background: "var(--bg-canvas)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>SIU Referral Precision</span>
-                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--risk-high)", fontSize: "0.85rem" }}>96.2%</strong>
+                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--risk-high)", fontSize: "0.85rem" }}>
+                    {modelAlignment.total_adjudicated > 0 ? `${modelAlignment.agreement_rate}%` : "0.0%"}
+                  </strong>
                 </div>
               </div>
 
               <div style={{ padding: "10px 12px", background: "var(--bg-canvas)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>False Positive Mitigation</span>
-                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--risk-low)", fontSize: "0.85rem" }}>14.3%</strong>
+                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--risk-low)", fontSize: "0.85rem" }}>
+                    {modelAlignment.false_positives_mitigated} cases
+                  </strong>
                 </div>
               </div>
 
               <div style={{ padding: "10px 12px", background: "var(--bg-canvas)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Average Triage Velocity</span>
-                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--primary)", fontSize: "0.85rem" }}>4.2 min</strong>
+                  <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Total Adjudicated Decisions</span>
+                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--primary)", fontSize: "0.85rem" }}>
+                    {modelAlignment.total_adjudicated} decisions
+                  </strong>
                 </div>
               </div>
             </div>

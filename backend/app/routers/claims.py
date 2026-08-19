@@ -98,3 +98,29 @@ async def get_audit_trail(claim_id: str):
     Retrieves the chronological audit log entries recorded during the investigation of a claim.
     """
     return await claim_service.get_audit_history_for_claim(claim_id)
+
+
+@router.delete(
+    "/{claim_id}",
+    summary="Delete a Specific Claim"
+)
+async def delete_claim(claim_id: str):
+    """
+    Permanently deletes a claim record from the database.
+    """
+    deleted = await claim_service.delete_claim(claim_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Claim '{claim_id}' not found.")
+    return {"message": f"Claim '{claim_id}' has been permanently deleted.", "claim_id": claim_id}
+
+
+@router.delete(
+    "",
+    summary="Delete All Claims (Clear Database)"
+)
+async def delete_all_claims():
+    """
+    Permanently deletes all claims from the database to start with a clean state.
+    """
+    count = await claim_service.delete_all_claims()
+    return {"message": f"Successfully removed {count} claims.", "deleted_count": count}

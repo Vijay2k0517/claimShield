@@ -188,5 +188,13 @@ class ClaimService:
         raw_logs = await audit_repository.get_audit_history(claim_id=claim_id)
         return [AuditLogEntry.model_validate(l) for l in raw_logs]
 
+    async def delete_claim(self, claim_id: str) -> bool:
+        """Deletes a specific claim."""
+        return await claim_repository.delete_claim(claim_id)
+
+    async def delete_all_claims(self) -> int:
+        """Deletes all claims from the database."""
+        return await claim_repository.delete_all_claims()
+
 
 claim_service = ClaimService()

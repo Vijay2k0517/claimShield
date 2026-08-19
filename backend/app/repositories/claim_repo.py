@@ -187,18 +187,36 @@ class ClaimRepository:
 
     async def delete_claim(self, claim_id: str) -> bool:
         """Deletes a claim."""
+        deleted = False
         col = self.collection
         if col is not None:
             try:
                 pattern = re.compile(f"^{re.escape(claim_id)}$", re.IGNORECASE)
-                await col.delete_one({"claim_id": pattern})
+                res = await col.delete_one({"claim_id": pattern})
+                if res.deleted_count > 0:
+                    deleted = True
             except Exception:
                 pass
 
         if claim_id.upper() in self._memory_store:
             del self._memory_store[claim_id.upper()]
-            return True
-        return False
+            deleted = True
+        return deleted
+
+    async def delete_all_claims(self) -> int:
+        """Deletes all claims from MongoDB and in-memory storage."""
+        count = len(self._memory_store)
+        self._memory_store.clear()
+
+        col = self.collection
+        if col is not None:
+            try:
+                res = await col.delete_many({})
+                return res.deleted_count
+            except Exception as e:
+                logger.warning(f"Error clearing MongoDB claims: {e}")
+
+        return count
 
 
 claim_repository = ClaimRepository()

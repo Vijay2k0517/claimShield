@@ -54,6 +54,72 @@ class ClaimService:
             damage_description=damage_desc
         )
 
+        # 2. Dynamic Similarity Search against existing claims repository
+        target_emb = ai_service.extract_image_embeddings(image_ref)
+        candidates, _ = await claim_repository.get_claims(
+            filters=type("ClaimFilterParams", (), {"risk_level": None, "status": None, "vehicle_make": None, "search": None, "start_date": None, "end_date": None, "sort_by": None, "sort_order": "desc", "page": 1, "page_size": 100})()
+        )
+
+        similar_items = []
+        highest_match = 0.0
+        top_matching_claim_id = ""
+
+        for cand in candidates:
+            cand_id = cand.get("claim_id", "")
+            cand_img = cand.get("evidence", {}).get("original_image", "")
+            cand_emb = ai_service.extract_image_embeddings(cand_img)
+            cos_sim = similarity_service.calculate_cosine_similarity(target_emb, cand_emb)
+            score = round(cos_sim * 100.0, 1)
+
+            if score >= 50.0:
+                if score > highest_match:
+                    highest_match = score
+                    top_matching_claim_id = cand_id
+
+                notes = (
+                    "CRITICAL: Duplicate / recycled accident photograph detected (Syndicate Fraud Alert)."
+                    if score >= 95.0
+                    else "High visual feature match on bumper and structural deformation points."
+                    if score >= 80.0
+                    else "Moderate structural feature alignment on vehicle panel angles."
+                )
+
+                raw_risk = cand.get("risk_level", "HIGH")
+                risk_enum = RiskLevel(raw_risk) if raw_risk in RiskLevel.__members__ else RiskLevel.HIGH
+                raw_status = cand.get("status", "Review")
+                status_enum = ClaimStatus(raw_status) if raw_status in [s.value for s in ClaimStatus] else ClaimStatus.REVIEW
+
+                similar_items.append({
+                    "claim_id": cand_id,
+                    "vehicle_number": cand.get("vehicle_number", "Unknown"),
+                    "vehicle_make": cand.get("vehicle_make", "Unknown"),
+                    "vehicle_model": cand.get("vehicle_model", "Unknown"),
+                    "accident_date": cand.get("accident_date", "2025-01-01"),
+                    "similarity_score": score,
+                    "risk_level": risk_enum.value,
+                    "status": status_enum.value,
+                    "image": cand_img or image_ref,
+                    "notes": notes
+                })
+
+        similar_items.sort(key=lambda x: x["similarity_score"], reverse=True)
+
+        # 3. Fraud Risk Elevation if duplicate image is detected
+        final_fraud_prob = ai_result.fraud_probability
+        final_risk_level = ai_result.risk_level.value
+        final_recommendation = ai_result.recommendation
+        final_flag_reasons = list(ai_result.flag_reasons)
+
+        if highest_match >= 90.0:
+            final_fraud_prob = 98.5
+            final_risk_level = RiskLevel.HIGH.value
+            final_recommendation = "Manual Investigation (SIU Referral)"
+            final_flag_reasons.insert(0, f"CRITICAL: {highest_match}% duplicate visual match detected against prior historical claim {top_matching_claim_id} (Recycled photo fraud).")
+        elif highest_match >= 75.0:
+            final_fraud_prob = max(final_fraud_prob, 76.0)
+            final_risk_level = RiskLevel.HIGH.value
+            final_flag_reasons.insert(0, f"High visual similarity ({highest_match}%) with prior collision damage record {top_matching_claim_id}.")
+
         evidence_payload = EvidencePayload(
             original_image=image_ref,
             heatmap=ai_result.heatmap_url or image_ref,
@@ -62,13 +128,9 @@ class ClaimService:
             confidence_score=ai_result.confidence_score
         )
 
-        # 2. Dynamic Similarity Search
-        sim_response = await similarity_service.find_similar_claims_by_id(claim_id=claim_id, limit=3)
-        similar_items = sim_response.matches
-
         submission_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        # 3. Construct Complete Claim Document
+        # 4. Construct Complete Claim Document
         full_claim_dict: Dict[str, Any] = {
             "claim_id": claim_id,
             "policy_id": claim_data.policy_id,
@@ -80,17 +142,17 @@ class ClaimService:
             "accident_date": claim_data.accident_date,
             "submission_date": submission_date,
             "status": ClaimStatus.REVIEW.value,
-            "fraud_probability": ai_result.fraud_probability,
-            "risk_level": ai_result.risk_level.value,
-            "recommendation": ai_result.recommendation,
+            "fraud_probability": final_fraud_prob,
+            "risk_level": final_risk_level,
+            "recommendation": final_recommendation,
             "ai_model": ai_result.ai_model,
-            "flag_reasons": ai_result.flag_reasons,
+            "flag_reasons": final_flag_reasons,
             "evidence": evidence_payload.model_dump(),
-            "similar_claims": [item.model_dump() for item in similar_items],
+            "similar_claims": similar_items[:3],
             "decision": None
         }
 
-        # 4. Save to Database
+        # 5. Save to Database
         try:
             await claim_repository.create_claim(full_claim_dict)
         except Exception as e:
@@ -99,10 +161,16 @@ class ClaimService:
         return ClaimResponse.model_validate(full_claim_dict)
 
     async def get_claim_details(self, claim_id: str) -> ClaimResponse:
-        """Retrieves a single claim by its unique ID."""
+        """Retrieves a single claim by its unique ID, dynamically attaching live similar claims."""
         doc = await claim_repository.get_claim_by_id(claim_id)
         if not doc:
             raise HTTPException(status_code=404, detail=f"Claim '{claim_id}' not found.")
+
+        # Dynamically attach similar claims if missing or outdated
+        sim_res = await similarity_service.find_similar_claims_by_id(claim_id=claim_id, limit=3)
+        if sim_res.matches:
+            doc["similar_claims"] = [m.model_dump() for m in sim_res.matches]
+
         return ClaimResponse.model_validate(doc)
 
     async def query_claims(self, filters: ClaimFilterParams) -> ClaimListResponse:

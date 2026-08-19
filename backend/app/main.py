@@ -33,8 +33,6 @@ async def lifespan(app: FastAPI):
         try:
             # Initialize MongoDB collection indexes
             await init_indexes()
-            # Seed canonical claims if database is currently empty
-            await seed_database(force=False)
         except Exception as e:
             logger.warning(f"MongoDB post-connection initialization skipped: {e}")
     else:

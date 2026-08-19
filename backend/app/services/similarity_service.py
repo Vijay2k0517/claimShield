@@ -79,20 +79,22 @@ class SimilarityService:
             cand_emb = ai_service.extract_image_embeddings(cand_img)
 
             cos_sim = self.calculate_cosine_similarity(target_emb, cand_emb)
-            
-            # Hybrid boost for identical make/model
+            raw_score = cos_sim * 100.0
+
+            # Boost for identical make/model context
             make_match = cand.get("vehicle_make", "").lower() == target_claim.get("vehicle_make", "").lower()
             model_match = cand.get("vehicle_model", "").lower() == target_claim.get("vehicle_model", "").lower()
-            
-            hybrid_boost = (0.1 if make_match else 0.0) + (0.1 if model_match else 0.0)
-            score = round(min(98.0, (cos_sim * 80.0 + hybrid_boost * 100.0)), 1)
+            context_boost = (2.0 if make_match else 0.0) + (2.0 if model_match else 0.0)
+
+            score = round(min(100.0, raw_score + (context_boost if raw_score > 70.0 else 0.0)), 1)
 
             if score >= min_score:
-                notes = (
-                    "High visual feature match on bumper and panel stress points."
-                    if score > 80.0
-                    else "Moderate structural match on headlight mounting bracket."
-                )
+                if score >= 95.0:
+                    notes = "CRITICAL: Duplicate / recycled accident photograph detected (Syndicate Fraud Alert)."
+                elif score >= 80.0:
+                    notes = "High visual feature match on bumper and structural deformation points."
+                else:
+                    notes = "Moderate structural feature alignment on vehicle panel angles."
                 
                 # Safe fallback for status/risk enum
                 raw_risk = cand.get("risk_level", "HIGH")

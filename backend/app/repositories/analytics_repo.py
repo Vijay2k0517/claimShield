@@ -134,13 +134,16 @@ class AnalyticsRepository:
             d_str = (today - timedelta(days=i)).isoformat()
             date_map[d_str] = {"LOW": 0, "REVIEW": 0, "HIGH": 0, "total": 0}
 
-        claims = list(claim_repository._memory_store.values())
+        claims = []
         col = self.claims_collection
         if col is not None:
             try:
                 claims = await col.find({}, {"_id": 0, "submission_date": 1, "risk_level": 1}).to_list(length=1000)
             except Exception:
-                pass
+                claims = []
+
+        if not claims:
+            claims = list(claim_repository._memory_store.values())
 
         for c in claims:
             s_date = c.get("submission_date", "")
@@ -163,13 +166,16 @@ class AnalyticsRepository:
 
     async def get_fraud_reason_frequencies(self) -> List[FraudReasonFrequency]:
         """Calculates occurrence counts and frequencies for anomaly reasons."""
-        claims = list(claim_repository._memory_store.values())
+        claims = []
         col = self.claims_collection
         if col is not None:
             try:
                 claims = await col.find({}, {"_id": 0, "flag_reasons": 1}).to_list(length=1000)
             except Exception:
-                pass
+                claims = []
+
+        if not claims:
+            claims = list(claim_repository._memory_store.values())
 
         all_reasons: List[str] = []
         for c in claims:

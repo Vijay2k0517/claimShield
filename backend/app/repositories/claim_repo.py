@@ -1,4 +1,6 @@
 import logging
+import json
+from pathlib import Path
 from typing import List, Optional, Tuple, Dict, Any
 import re
 from pymongo import DESCENDING, ASCENDING
@@ -10,8 +12,27 @@ logger = logging.getLogger("claimshield.claim_repo")
 
 class ClaimRepository:
     def __init__(self):
-        # In-memory store fallback when MongoDB is offline / testing
+        self._file_store_path = Path("data/claims_store.json")
         self._memory_store: Dict[str, Dict[str, Any]] = {}
+        self._load_from_disk()
+
+    def _load_from_disk(self):
+        if self._file_store_path.exists():
+            try:
+                with open(self._file_store_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        self._memory_store = data
+            except Exception as e:
+                logger.warning(f"Could not load claims_store.json: {e}")
+
+    def _save_to_disk(self):
+        try:
+            self._file_store_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._file_store_path, "w", encoding="utf-8") as f:
+                json.dump(self._memory_store, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not write claims_store.json: {e}")
 
     @property
     def collection(self):
@@ -23,7 +44,8 @@ class ClaimRepository:
         if col is not None:
             try:
                 count = await col.count_documents({})
-                return f"CLM{str(count + 1).zfill(3)}"
+                if count > 0:
+                    return f"CLM{str(count + 1).zfill(3)}"
             except Exception:
                 pass
         
@@ -35,8 +57,9 @@ class ClaimRepository:
         claim_data.pop("_id", None)
         claim_id = claim_data.get("claim_id", "")
 
-        # Store in-memory
+        # Store in-memory and disk
         self._memory_store[claim_id.upper()] = dict(claim_data)
+        self._save_to_disk()
 
         col = self.collection
         if col is not None:
@@ -170,6 +193,7 @@ class ClaimRepository:
         # In-memory fallback
         if claim_id.upper() in self._memory_store:
             self._memory_store[claim_id.upper()].update(update_dict)
+            self._save_to_disk()
             return self._memory_store[claim_id.upper()]
         return None
 
@@ -200,6 +224,7 @@ class ClaimRepository:
 
         if claim_id.upper() in self._memory_store:
             del self._memory_store[claim_id.upper()]
+            self._save_to_disk()
             deleted = True
         return deleted
 
@@ -207,6 +232,7 @@ class ClaimRepository:
         """Deletes all claims from MongoDB and in-memory storage."""
         count = len(self._memory_store)
         self._memory_store.clear()
+        self._save_to_disk()
 
         col = self.collection
         if col is not None:

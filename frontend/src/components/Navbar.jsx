@@ -1,137 +1,241 @@
-import { Search, Bell, ChevronRight, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Shield,
+  LayoutDashboard,
+  ClipboardList,
+  PlusCircle,
+  FileSearch,
+  BarChart3,
+  Search,
+  Settings,
+  Menu,
+  X,
+  Sparkles,
+  ChevronDown
+} from "lucide-react";
+import { getClaims } from "../services/api";
 
 function Navbar({ currentPage = "dashboard", selectedClaimId, onNavigate }) {
-  const getBreadcrumbTitle = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return { section: "Overview", title: "Claims Dashboard" };
-      case "claims":
-        return { section: "Management", title: "Claims Directory" };
-      case "new-claim":
-        return { section: "Intake", title: "New Claim Intake" };
-      case "investigation":
-        return { section: "Investigation", title: `Case Overview ${selectedClaimId ? `(${selectedClaimId})` : ""}` };
-      case "evidence":
-        return { section: "Investigation", title: `Damage Photos & Heatmap ${selectedClaimId ? `(${selectedClaimId})` : ""}` };
-      case "similar-claims":
-        return { section: "Investigation", title: `Prior Claims Match ${selectedClaimId ? `(${selectedClaimId})` : ""}` };
-      case "decision":
-        return { section: "Investigation", title: `Adjudication Decision ${selectedClaimId ? `(${selectedClaimId})` : ""}` };
-      case "analytics":
-        return { section: "Reporting", title: "Risk & Fraud Analytics" };
-      case "models":
-        return { section: "System", title: "Vision Model Specifications" };
-      case "settings":
-        return { section: "Settings", title: "Platform & Profile Configuration" };
-      default:
-        return { section: "Overview", title: "Dashboard" };
+  const [flaggedCount, setFlaggedCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    getClaims()
+      .then((claims) => {
+        if (isMounted && claims) {
+          const count = claims.filter(
+            (c) => c.risk_level === "HIGH" || c.status === "Escalated" || (c.fraud_probability && c.fraud_probability >= 75)
+          ).length;
+          setFlaggedCount(count);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setFlaggedCount(0);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage]);
+
+  const handleNav = (page, claimId = null) => {
+    setMobileMenuOpen(false);
+    if (onNavigate) {
+      onNavigate(page, claimId);
     }
   };
 
-  const breadcrumb = getBreadcrumbTitle();
+  const handleSearchSubmit = (e) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      handleNav("claims");
+    }
+  };
+
+  const isInvestigationActive = ["investigation", "evidence", "similar-claims", "decision"].includes(currentPage);
 
   return (
-    <header className="navbar">
-      {/* Breadcrumb Path */}
-      <div className="nav-left">
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem" }}>
-          <span
-            style={{ color: "var(--text-muted)", cursor: "pointer" }}
-            onClick={() => onNavigate && onNavigate("dashboard")}
+    <header className="top-navbar">
+      <div className="navbar-inner">
+        {/* Brand & Organization */}
+        <div className="navbar-brand" onClick={() => handleNav("dashboard")}>
+          <div className="brand-logo-icon">
+            <Shield size={19} />
+          </div>
+          <div className="brand-titles">
+            <span className="brand-name">ClaimShield</span>
+            <span className="brand-tag">AI FRAUD SIU</span>
+          </div>
+        </div>
+
+        {/* Desktop Essential Navigation Links */}
+        <nav className="navbar-links">
+          {/* 1. Dashboard */}
+          <button
+            className={`nav-tab-btn ${currentPage === "dashboard" ? "active" : ""}`}
+            onClick={() => handleNav("dashboard")}
           >
-            Claims
-          </span>
-          <ChevronRight size={13} style={{ color: "var(--text-dim)" }} />
-          <span style={{ color: "var(--text-muted)" }}>
-            {breadcrumb.section}
-          </span>
-          <ChevronRight size={13} style={{ color: "var(--text-dim)" }} />
-          <strong style={{ color: "var(--text-primary)", fontWeight: "600" }}>
-            {breadcrumb.title}
-          </strong>
+            <LayoutDashboard size={15} />
+            <span>Dashboard</span>
+          </button>
+
+          {/* 2. Claims Directory */}
+          <button
+            className={`nav-tab-btn ${currentPage === "claims" ? "active" : ""}`}
+            onClick={() => handleNav("claims")}
+          >
+            <ClipboardList size={15} />
+            <span>Claims Directory</span>
+            {flaggedCount > 0 && (
+              <span className="nav-badge-pill">
+                {flaggedCount}
+              </span>
+            )}
+          </button>
+
+          {/* 3. New Claim Intake */}
+          <button
+            className={`nav-tab-btn ${currentPage === "new-claim" ? "active" : ""}`}
+            onClick={() => handleNav("new-claim")}
+          >
+            <PlusCircle size={15} />
+            <span>Intake Claim</span>
+          </button>
+
+          {/* 4. Active Investigation (Contextual Case Tab) */}
+          {(isInvestigationActive || selectedClaimId) && (
+            <button
+              className={`nav-tab-btn ${isInvestigationActive ? "active" : ""}`}
+              onClick={() => handleNav("investigation", selectedClaimId || "CLM001")}
+            >
+              <FileSearch size={15} />
+              <span>Active Case</span>
+              {selectedClaimId && (
+                <span className="nav-case-id-pill">
+                  {selectedClaimId}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* 5. Risk Analytics */}
+          <button
+            className={`nav-tab-btn ${currentPage === "analytics" ? "active" : ""}`}
+            onClick={() => handleNav("analytics")}
+          >
+            <BarChart3 size={15} />
+            <span>Analytics</span>
+          </button>
+        </nav>
+
+        {/* Global Controls & User Profile */}
+        <div className="navbar-right">
+          {/* Quick Search */}
+          <div className="nav-search-box">
+            <Search size={14} className="search-icon" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchSubmit}
+              placeholder="Search claims or plates..."
+            />
+            <kbd className="search-kbd">/</kbd>
+          </div>
+
+          {/* AI Status Badge */}
+          <div
+            className="ai-engine-status"
+            onClick={() => handleNav("models")}
+            title="DamageVision PyTorch ResNet50 Engine Active"
+          >
+            <div className="ai-pulse-dot" />
+            <span className="ai-status-text">ResNet50 Active</span>
+          </div>
+
+          {/* Settings Shortcut */}
+          <button
+            className={`nav-icon-btn ${currentPage === "settings" ? "active" : ""}`}
+            onClick={() => handleNav("settings")}
+            title="Platform Settings"
+          >
+            <Settings size={16} />
+          </button>
+
+          {/* User Profile Pill
+          <div className="nav-user-pill">
+            <div className="user-avatar-circle">SJ</div>
+            <div className="user-info-text">
+              <span className="user-name">Sarah J.</span>
+              <span className="user-role">SIU Lead</span>
+            </div>
+          </div> */}
+
+          {/* Mobile Hamburger Toggle */}
+          <button
+            className="mobile-hamburger-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
 
-      {/* Global Controls & User Profile */}
-      <div className="nav-right">
-        {/* Global Search Bar */}
-        <div className="nav-search">
-          <Search size={15} style={{ color: "var(--text-muted)" }} />
-          <input
-            type="text"
-            placeholder="Search claims, policies, vehicle plates..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.target.value.trim() && onNavigate) {
-                onNavigate("claims");
-              }
-            }}
-          />
-          <kbd
-            style={{
-              background: "#f1f5f9",
-              color: "var(--text-muted)",
-              fontSize: "0.68rem",
-              padding: "1px 5px",
-              borderRadius: "4px",
-              border: "1px solid #cbd5e1",
-              fontFamily: "var(--font-mono)"
-            }}
+      {/* Mobile Slide-Down Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-nav-drawer">
+          <button
+            className={`mobile-nav-item ${currentPage === "dashboard" ? "active" : ""}`}
+            onClick={() => handleNav("dashboard")}
           >
-            /
-          </kbd>
-        </div>
+            <LayoutDashboard size={16} />
+            <span>Dashboard</span>
+          </button>
 
-        {/* System Status Pill */}
-        <div className="system-status-pill">
-          <div className="pulse-dot" />
-          <span>System Online</span>
-        </div>
+          <button
+            className={`mobile-nav-item ${currentPage === "claims" ? "active" : ""}`}
+            onClick={() => handleNav("claims")}
+          >
+            <ClipboardList size={16} />
+            <span>Claims Directory</span>
+            {flaggedCount > 0 && <span className="nav-badge-pill">{flaggedCount}</span>}
+          </button>
 
-        {/* Notifications */}
-        <button
-          style={{
-            position: "relative",
-            background: "#ffffff",
-            border: "1px solid var(--border-color)",
-            color: "var(--text-secondary)",
-            padding: "6px 8px",
-            borderRadius: "var(--radius-md)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "var(--shadow-xs)"
-          }}
-          title="Notifications"
-        >
-          <Bell size={16} />
-          <span
-            style={{
-              position: "absolute",
-              top: "3px",
-              right: "3px",
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: "var(--risk-high)"
-            }}
-          />
-        </button>
+          <button
+            className={`mobile-nav-item ${currentPage === "new-claim" ? "active" : ""}`}
+            onClick={() => handleNav("new-claim")}
+          >
+            <PlusCircle size={16} />
+            <span>Intake New Claim</span>
+          </button>
 
-        {/* Adjuster Profile */}
-        <div className="user-profile-badge">
-          <div className="user-avatar">
-            SJ
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-            <span style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-primary)" }}>
-              Sarah Jenkins
-            </span>
-            <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
-              SIU Specialist (INV-8402)
-            </span>
-          </div>
+          <button
+            className={`mobile-nav-item ${isInvestigationActive ? "active" : ""}`}
+            onClick={() => handleNav("investigation", selectedClaimId || "CLM001")}
+          >
+            <FileSearch size={16} />
+            <span>Investigation Workspace ({selectedClaimId || "CLM001"})</span>
+          </button>
+
+          <button
+            className={`mobile-nav-item ${currentPage === "analytics" ? "active" : ""}`}
+            onClick={() => handleNav("analytics")}
+          >
+            <BarChart3 size={16} />
+            <span>Risk Analytics</span>
+          </button>
+
+          <button
+            className={`mobile-nav-item ${currentPage === "settings" ? "active" : ""}`}
+            onClick={() => handleNav("settings")}
+          >
+            <Settings size={16} />
+            <span>Settings</span>
+          </button>
         </div>
-      </div>
+      )}
     </header>
   );
 }

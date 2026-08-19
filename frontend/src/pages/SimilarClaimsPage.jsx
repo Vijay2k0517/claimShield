@@ -3,7 +3,7 @@ import {
   Search,
   AlertTriangle
 } from "lucide-react";
-import { getClaimById, getSimilarClaims } from "../services/api";
+import { getClaimById, getSimilarClaims, getMediaUrl } from "../services/api";
 import RiskBadge from "../components/RiskBadge";
 import StatusBadge from "../components/StatusBadge";
 import InvestigationNav from "../components/InvestigationNav";
@@ -58,7 +58,7 @@ function SimilarClaimsPage({ claimId = "CLM001", onNavigate }) {
   }
 
   const currentEvidence = claim.evidence || {};
-  const currentImage = currentEvidence.original_image || "https://images.unsplash.com/photo-1590362891991-f776e747a588";
+  const currentImage = getMediaUrl(currentEvidence.original_image || "https://images.unsplash.com/photo-1590362891991-f776e747a588");
 
   const filteredMatches = similarClaims.filter((item) => {
     if (!searchTerm.trim()) return true;
@@ -181,7 +181,7 @@ function SimilarClaimsPage({ claimId = "CLM001", onNavigate }) {
                     </span>
                   </div>
                   <div style={{ height: "210px", overflow: "hidden", background: "#0f172a" }}>
-                    <img src={activeMatch.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588"} alt="Historical" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={getMediaUrl(activeMatch.image)} alt="Historical" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                   <div style={{ padding: "10px 12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                     <div><strong>Outcome:</strong> Total Loss Claim Settled</div>
@@ -289,7 +289,7 @@ function SimilarClaimsPage({ claimId = "CLM001", onNavigate }) {
                     }}
                   >
                     <img
-                      src={match.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588"}
+                      src={getMediaUrl(match.image)}
                       alt={match.claim_id}
                       style={{ width: "44px", height: "44px", borderRadius: "var(--radius-sm)", objectFit: "cover", flexShrink: 0 }}
                     />

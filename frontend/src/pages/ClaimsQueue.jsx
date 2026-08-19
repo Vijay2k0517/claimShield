@@ -9,13 +9,15 @@ import {
   ChevronRight,
   RotateCcw,
   ShieldAlert,
-  Calendar
+  Calendar,
+  Trash2,
+  AlertOctagon
 } from "lucide-react";
-import { getClaims } from "../services/api";
+import { getClaims, deleteClaim, clearAllClaims } from "../services/api";
 import RiskBadge from "../components/RiskBadge";
 import StatusBadge from "../components/StatusBadge";
 
-function ClaimsQueue({ onViewClaim, onNavigate }) {
+function ClaimsQueue({ onViewClaim, onNavigate, showToast }) {
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,26 +35,52 @@ function ClaimsQueue({ onViewClaim, onNavigate }) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadClaims() {
-      try {
-        setLoading(true);
-        const data = await getClaims();
-        if (isMounted) {
-          setClaims(data || []);
-        }
-      } catch (err) {
-        console.error("Error loading claims directory:", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+  async function refreshClaims() {
+    try {
+      setLoading(true);
+      const data = await getClaims();
+      setClaims(data || []);
+    } catch (err) {
+      console.error("Error loading claims directory:", err);
+    } finally {
+      setLoading(false);
     }
-    loadClaims();
-    return () => {
-      isMounted = false;
-    };
+  }
+
+  useEffect(() => {
+    refreshClaims();
   }, []);
+
+  const handleDeleteClaim = async (e, claimId) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to permanently delete claim ${claimId}?`)) {
+      return;
+    }
+
+    try {
+      await deleteClaim(claimId);
+      setClaims((prev) => prev.filter((c) => c.claim_id !== claimId));
+      if (showToast) showToast(`Claim ${claimId} permanently deleted.`, "info");
+    } catch (err) {
+      console.error("Failed to delete claim:", err);
+      alert("Could not delete claim. Please try again.");
+    }
+  };
+
+  const handleClearAllClaims = async () => {
+    if (!window.confirm("⚠️ WARNING: This will permanently delete ALL claims from the database. Proceed?")) {
+      return;
+    }
+
+    try {
+      await clearAllClaims();
+      setClaims([]);
+      if (showToast) showToast("All claim records have been cleared.", "info");
+    } catch (err) {
+      console.error("Failed to clear claims:", err);
+      alert("Could not clear claims. Please try again.");
+    }
+  };
 
   const vehicleMakes = useMemo(() => {
     const makes = new Set(claims.map((c) => c.vehicle_make).filter(Boolean));
@@ -289,6 +317,30 @@ function ClaimsQueue({ onViewClaim, onNavigate }) {
             Reset
           </button>
         )}
+
+        {claims.length > 0 && (
+          <button
+            onClick={handleClearAllClaims}
+            title="Permanently remove all claim records from database"
+            style={{
+              marginLeft: "auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              background: "#fff1f2",
+              border: "1px solid #fecdd3",
+              color: "#e11d48",
+              borderRadius: "var(--radius-md)",
+              padding: "7px 12px",
+              fontSize: "0.78rem",
+              fontWeight: "600",
+              cursor: "pointer"
+            }}
+          >
+            <Trash2 size={13} />
+            Clear All Records
+          </button>
+        )}
       </div>
 
       {/* Directory Table */}
@@ -335,10 +387,10 @@ function ClaimsQueue({ onViewClaim, onNavigate }) {
             <ShieldAlert size={36} style={{ color: "var(--text-muted)", opacity: 0.6 }} />
             <h4>No matching claims found</h4>
             <p style={{ fontSize: "0.82rem", maxWidth: "360px" }}>
-              No claims match your filter query. Reset your search criteria to view the full directory.
+              No claims in the directory. Submit a new claim or upload photos to start fraud investigation.
             </p>
-            <button className="btn-secondary" onClick={resetFilters}>
-              Clear Filters
+            <button className="btn-primary" onClick={() => onNavigate("new-claim")}>
+              + Submit New Claim
             </button>
           </div>
         ) : (
@@ -406,7 +458,7 @@ function ClaimsQueue({ onViewClaim, onNavigate }) {
                   <StatusBadge status={claim.status} />
                 </div>
 
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "right", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "6px" }}>
                   <button
                     type="button"
                     className="view-btn"
@@ -418,6 +470,27 @@ function ClaimsQueue({ onViewClaim, onNavigate }) {
                   >
                     <Eye size={13} />
                     Inspect
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteClaim(e, claim.claim_id)}
+                    title={`Delete Claim ${claim.claim_id}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid #fee2e2",
+                      background: "#fff1f2",
+                      color: "#e11d48",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <Trash2 size={13} />
                   </button>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -11,8 +12,31 @@ import {
   Settings,
   Shield
 } from "lucide-react";
+import { getClaims } from "../services/api";
 
 function Sidebar({ currentPage, selectedClaimId, onNavigate }) {
+  const [flaggedCount, setFlaggedCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    getClaims()
+      .then((claims) => {
+        if (isMounted && claims) {
+          const count = claims.filter(
+            (c) => c.risk_level === "HIGH" || c.status === "Escalated" || (c.fraud_probability && c.fraud_probability >= 75)
+          ).length;
+          setFlaggedCount(count);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setFlaggedCount(0);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage]);
+
   return (
     <aside className="sidebar">
       {/* Brand & Organization */}
@@ -45,19 +69,21 @@ function Sidebar({ currentPage, selectedClaimId, onNavigate }) {
         >
           <ClipboardList size={17} />
           <span>Claims Directory</span>
-          <span
-            style={{
-              marginLeft: "auto",
-              background: "#e11d48",
-              color: "#ffffff",
-              fontSize: "0.68rem",
-              fontWeight: "700",
-              padding: "1px 6px",
-              borderRadius: "9999px"
-            }}
-          >
-            2 Flagged
-          </span>
+          {flaggedCount > 0 && (
+            <span
+              style={{
+                marginLeft: "auto",
+                background: "#e11d48",
+                color: "#ffffff",
+                fontSize: "0.68rem",
+                fontWeight: "700",
+                padding: "1px 6px",
+                borderRadius: "9999px"
+              }}
+            >
+              {flaggedCount} Flagged
+            </span>
+          )}
         </button>
 
         {/* New Claim Intake */}

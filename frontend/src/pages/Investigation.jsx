@@ -4,16 +4,17 @@ import {
   Car,
   AlertTriangle,
   FileText,
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from "lucide-react";
-import { getClaimById, saveDecision } from "../services/api";
+import { getClaimById, saveDecision, getMediaUrl, deleteClaim } from "../services/api";
 import RiskBadge from "../components/RiskBadge";
 import StatusBadge from "../components/StatusBadge";
 import InvestigationNav from "../components/InvestigationNav";
 
 function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
   const [claim, setClaim] = useState(null);
-  const [activeImage, setActiveImage] = useState("original");
+  const [activeImage, setActiveImage] = useState("overlay");
   const [loading, setLoading] = useState(true);
 
   // Quick adjudication state inside workspace
@@ -26,8 +27,14 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
     async function loadClaim() {
       try {
         setLoading(true);
-        const data = await getClaimById(claimId || "CLM001");
+        const [data, simMatches] = await Promise.all([
+          getClaimById(claimId || "CLM001"),
+          getSimilarClaims(claimId || "CLM001")
+        ]);
         if (isMounted && data) {
+          if (simMatches && simMatches.length > 0) {
+            data.similar_claims = simMatches;
+          }
           setClaim(data);
           if (data.decision) {
             setQuickDecision(data.decision.decision || "");
@@ -64,9 +71,9 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
 
   const evidence = claim.evidence || {};
   const imageMap = {
-    original: evidence.original_image || "https://images.unsplash.com/photo-1590362891991-f776e747a588",
-    heatmap: evidence.heatmap || evidence.original_image,
-    overlay: evidence.overlay || evidence.original_image
+    original: getMediaUrl(evidence.original_image),
+    heatmap: getMediaUrl(evidence.heatmap || evidence.original_image),
+    overlay: getMediaUrl(evidence.overlay || evidence.original_image)
   };
 
   const similarClaims = claim.similar_claims || [];
@@ -90,6 +97,20 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
       alert("Failed to record decision.");
     } finally {
       setSubmittingDecision(false);
+    }
+  };
+
+  const handleDeleteCurrentClaim = async () => {
+    if (!window.confirm(`Are you sure you want to permanently delete claim ${claim.claim_id}?`)) {
+      return;
+    }
+    try {
+      await deleteClaim(claim.claim_id);
+      if (showToast) showToast(`Claim ${claim.claim_id} deleted.`, "info");
+      if (onNavigate) onNavigate("queue");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Could not delete claim.");
     }
   };
 
@@ -124,6 +145,28 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <StatusBadge status={claim.status} />
             <RiskBadge risk={claim.risk_level} probability={claim.fraud_probability} />
+
+            <button
+              type="button"
+              onClick={handleDeleteCurrentClaim}
+              title={`Permanently delete ${claim.claim_id}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "6px 10px",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid #fee2e2",
+                background: "#fff1f2",
+                color: "#e11d48",
+                fontSize: "0.78rem",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              <Trash2 size={13} />
+              Delete Case
+            </button>
           </div>
         </div>
 
@@ -187,15 +230,48 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
                 background: "#0f172a"
               }}
             >
-              <img
-                src={imageMap[activeImage]}
-                alt="Damage Evidence"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover"
-                }}
-              />
+              {activeImage === "heatmap" ? (
+                <>
+                  <img
+                    src={imageMap.original}
+                    alt="Original Damage Evidence"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover"
+                    }}
+                  />
+                  <img
+                    src={imageMap.heatmap}
+                    alt="Grad-CAM Heatmap"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      opacity: 0.85
+                    }}
+                  />
+                </>
+              ) : (
+                <img
+                  src={imageMap[activeImage]}
+                  alt="Damage Evidence"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover"
+                  }}
+                />
+              )}
               <div
                 style={{
                   position: "absolute",
@@ -206,7 +282,8 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
                   borderRadius: "var(--radius-sm)",
                   fontSize: "0.72rem",
                   color: "#fff",
-                  fontFamily: "var(--font-mono)"
+                  fontFamily: "var(--font-mono)",
+                  zIndex: 2
                 }}
               >
                 Layer: {activeImage.toUpperCase()}
@@ -285,7 +362,7 @@ function Investigation({ claimId = "CLM001", onNavigate, showToast }) {
                 }}
               >
                 <img
-                  src={topSimilar.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588"}
+                  src={getMediaUrl(topSimilar.image)}
                   alt="Prior Claim"
                   style={{ width: "60px", height: "60px", borderRadius: "var(--radius-sm)", objectFit: "cover", flexShrink: 0 }}
                 />
